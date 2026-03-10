@@ -59,9 +59,9 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue';
 import axios from 'axios';
-import ProductGrid from '../components/pos/ProductGrid.vue';
-import CartPanel from '../components/pos/CartPanel.vue';
-import PaymentModal from '../components/pos/PaymentModal.vue';
+import ProductGrid from '../components/POS/ProductGrid.vue';
+import CartPanel from '../components/POS/CartPanel.vue';
+import PaymentModal from '../components/POS/PaymentModal.vue';
 import AlertService from '../components/alerts/AlertService.js';
 
 const cartItems = ref([]);
