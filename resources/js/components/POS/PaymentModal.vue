@@ -68,13 +68,15 @@
       </div>
 
       <div class="p-6 border-t flex gap-3">
-        <ButtonSecondary @click="$emit('close')" class="flex-1 py-3">Cancel</ButtonSecondary>
-        <ButtonPrimary 
-          @click="confirmPayment" 
-          :disabled="!canProcessPayment"
+        <ButtonSecondary @click="$emit('close')" :disabled="processing" class="flex-1 py-3">Cancel</ButtonSecondary>
+        <ButtonPrimary
+          @click="confirmPayment"
+          :disabled="!canProcessPayment || processing"
+          :loading="processing"
           class="flex-1 py-3"
         >
-          Confirm Payment
+          <span v-if="!processing">Confirm Payment</span>
+          <span v-else>Processing...</span>
         </ButtonPrimary>
       </div>
     </div>
@@ -96,6 +98,7 @@ const emit = defineEmits(['close', 'confirm']);
 const paymentMethods = ref([]);
 const selectedMethod = ref(1);
 const cashReceived = ref(0);
+const processing = ref(false);
 
 const change = computed(() => {
   if (selectedMethod.value === 1) {
@@ -136,6 +139,7 @@ function formatPrice(price) {
 }
 
 function confirmPayment() {
+  processing.value = true;
   emit('confirm', {
     paymentMethodId: selectedMethod.value,
     amount: selectedMethod.value === 1 ? cashReceived.value : props.total

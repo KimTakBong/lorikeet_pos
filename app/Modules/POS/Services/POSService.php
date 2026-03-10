@@ -21,20 +21,16 @@ class POSService
             $subtotal = 0;
             $discountTotal = $data['discount_amount'] ?? 0;
             $taxTotal = $data['tax_amount'] ?? 0;
-            
+
             foreach ($data['items'] as $item) {
                 $subtotal += $item['price'] * $item['quantity'];
             }
-            
+
             $grandTotal = $subtotal - $discountTotal + $taxTotal;
-            
-            $invoiceNumber = 'INV-' . now()->format('Ymd') . '-' . str_pad(
-                Order::whereDate('created_at', today())->count() + 1,
-                5,
-                '0',
-                STR_PAD_LEFT
-            );
-            
+
+            // Generate unique invoice number with retry logic
+            $invoiceNumber = $this->generateUniqueInvoiceNumber();
+
             $order = Order::create([
                 'invoice_number' => $invoiceNumber,
                 'customer_id' => $data['customer_id'] ?? null,
@@ -128,14 +124,14 @@ class POSService
     {
         $customer = $order->customer;
         $message = "*TOKO KOPI NUSANTARA*\n\nInvoice: {$order->invoice_number}\n\n";
-        
+
         foreach ($order->items as $item) {
             $message .= "{$item->product_name} x{$item->quantity}\n";
             $message .= number_format($item->total, 0, ',', '.') . "\n\n";
         }
-        
+
         $message .= "TOTAL: " . number_format($order->grand_total, 0, ',', '.') . "\n\nThank you for your purchase!";
-        
+
         MessageQueue::create([
             'customer_id' => $customer->id,
             'phone' => $customer->phone,
@@ -143,5 +139,37 @@ class POSService
             'status' => 'pending',
             'scheduled_at' => now(),
         ]);
+    }
+
+    /**
+     * Generate unique invoice number with retry logic
+     */
+    private function generateUniqueInvoiceNumber(int $attempt = 1): string
+    {
+        $datePrefix = 'INV-' . now()->format('Ymd') . '-';
+        
+        // Get the last invoice number for today
+        $lastOrder = Order::where('invoice_number', 'like', $datePrefix . '%')
+            ->orderBy('id', 'desc')
+            ->first();
+        
+        if ($lastOrder) {
+            // Extract the number from last invoice
+            $lastNumber = (int) substr($lastOrder->invoice_number, -5);
+            $newNumber = $lastNumber + $attempt;
+        } else {
+            // First order today
+            $newNumber = 1;
+        }
+        
+        $invoiceNumber = $datePrefix . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+        
+        // Check if this invoice number already exists
+        if (Order::where('invoice_number', $invoiceNumber)->exists()) {
+            // Retry with next number
+            return $this->generateUniqueInvoiceNumber($attempt + 1);
+        }
+        
+        return $invoiceNumber;
     }
 }

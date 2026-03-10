@@ -121,8 +121,10 @@ import {
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Title, Tooltip, Legend, Filler);
 
 const token = localStorage.getItem('token');
-const dateFrom = ref(new Date().toISOString().split('T')[0]); // Today
-const dateTo = ref(new Date().toISOString().split('T')[0]); // Today
+
+// Default to last 30 days
+const dateFrom = ref(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+const dateTo = ref(new Date().toISOString().split('T')[0]);
 
 const stats = ref({
   sales: { total: 0, orders: 0, average: 0 },

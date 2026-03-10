@@ -16,6 +16,7 @@ class MessageQueue extends Model
         'customer_id',
         'phone',
         'message',
+        'image_path',
         'status',
         'scheduled_at',
         'sent_at',

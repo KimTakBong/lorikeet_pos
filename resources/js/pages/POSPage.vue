@@ -53,6 +53,7 @@
     :total="grandTotal"
     @close="showPaymentModal = false"
     @confirm="confirmPayment"
+    ref="paymentModalRef"
   />
 </template>
 
@@ -73,6 +74,7 @@ const showPaymentModal = ref(false);
 const staffId = ref(null);
 const shiftId = ref(null);
 const loadingShift = ref(true);
+const paymentModalRef = ref(null);
 
 const subtotal = computed(() => {
   return cartItems.value.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -202,10 +204,20 @@ async function confirmPayment(paymentData) {
       customer.value = null;
       customerPhoneForReceipt.value = null;
       showPaymentModal.value = false;
+      
+      // Reset processing state in payment modal
+      if (paymentModalRef.value) {
+        paymentModalRef.value.processing = false;
+      }
     }
   } catch (error) {
     console.error('Payment failed:', error);
     AlertService.error('Payment failed: ' + (error.response?.data?.message || 'Unknown error'));
+    
+    // Reset processing state on error
+    if (paymentModalRef.value) {
+      paymentModalRef.value.processing = false;
+    }
   }
 }
 </script>

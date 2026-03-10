@@ -10,6 +10,7 @@ use App\Models\PaymentMethod;
 use App\Models\Staff;
 use App\Models\Shift;
 use App\Modules\POS\Services\POSService;
+use App\Services\ReceiptImageService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -91,26 +92,26 @@ class POSController extends Controller
             return;
         }
 
+        // Generate receipt image
+        $receiptImageService = app(ReceiptImageService::class);
+        $imagePath = $receiptImageService->generate($order);
+
         // Get store name from settings
         $storeName = \App\Models\Setting::get('business.store_name', 'TOKO KOPI NUSANTARA');
 
-        // Format message
+        // Format caption message
         $message = "*{$storeName}*\n\n";
-        $message .= "Invoice: {$order->invoice_number}\n\n";
-
-        foreach ($order->items as $item) {
-            $message .= "{$item->product_name} x{$item->quantity}\n";
-            $message .= number_format($item->total, 0, ',', '.') . "\n\n";
-        }
-
-        $message .= "TOTAL: " . number_format($order->grand_total, 0, ',', '.') . "\n\n";
+        $message .= "Invoice: {$order->invoice_number}\n";
+        $message .= "Date: " . \Carbon\Carbon::parse($order->created_at)->format('d M Y, H:i') . "\n\n";
+        $message .= "Total: Rp " . number_format($order->grand_total, 0, ',', '.') . "\n\n";
         $message .= "Thank you for your purchase!";
 
-        // Queue WhatsApp message
+        // Queue WhatsApp message with image
         $messageQueue = \App\Models\MessageQueue::create([
             'customer_id' => $customerId,
             'phone' => $phone,
             'message' => $message,
+            'image_path' => $imagePath,
             'status' => 'pending',
             'scheduled_at' => now(),
         ]);

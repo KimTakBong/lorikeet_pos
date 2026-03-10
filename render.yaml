@@ -1,0 +1,70 @@
+# Laravel Render.com Configuration
+# https://render.com/docs/deploy-laravel
+
+services:
+  # Web Service
+  - type: web
+    name: lorikeet
+    env: php
+    region: singapore
+    plan: free
+    branch: main
+    buildCommand: |
+      composer install --no-dev --optimize-autoloader --no-scripts
+      npm install
+      npm run build
+      php artisan config:cache
+      php artisan route:cache
+      php artisan view:cache
+    startCommand: vendor/bin/heroku-php-apache2 public/
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: LOG_CHANNEL
+        value: errorlog
+      - key: SESSION_DRIVER
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: DB_CONNECTION
+        value: pgsql
+      - fromDatabase:
+          name: lorikeet-db
+          property: DATABASE_URL
+    disk:
+      name: storage
+      mountPath: /storage
+      sizeGB: 1
+
+  # Database
+  - type: pserv
+    name: lorikeet-db
+    env: postgres
+    region: singapore
+    plan: free
+    ipAllowList: []
+
+  # Worker (for queues)
+  - type: worker
+    name: lorikeet-worker
+    env: php
+    region: singapore
+    plan: free
+    branch: main
+    buildCommand: |
+      composer install --no-dev --optimize-autoloader --no-scripts
+    startCommand: php artisan queue:work --sleep=3 --tries=3 --timeout=0
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: LOG_CHANNEL
+        value: errorlog
+      - key: DB_CONNECTION
+        value: pgsql
+      - fromDatabase:
+          name: lorikeet-db
+          property: DATABASE_URL

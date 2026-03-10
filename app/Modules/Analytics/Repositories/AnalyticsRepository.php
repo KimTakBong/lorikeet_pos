@@ -16,7 +16,8 @@ class AnalyticsRepository
     public function getDashboardStats(string $dateFrom, string $dateTo)
     {
         // Sales stats
-        $salesStats = Order::whereBetween('created_at', [$dateFrom, $dateTo])
+        $salesStats = Order::whereDate('created_at', '>=', $dateFrom)
+            ->whereDate('created_at', '<=', $dateTo)
             ->select(
                 DB::raw('SUM(grand_total) as total_sales'),
                 DB::raw('COUNT(*) as total_orders'),
@@ -25,7 +26,8 @@ class AnalyticsRepository
             ->first();
 
         // Expense stats
-        $expenseStats = Expense::whereBetween('expense_date', [$dateFrom, $dateTo])
+        $expenseStats = Expense::whereDate('expense_date', '>=', $dateFrom)
+            ->whereDate('expense_date', '<=', $dateTo)
             ->select(
                 DB::raw('SUM(amount) as total_expenses'),
                 DB::raw('COUNT(*) as total_expense_transactions')
@@ -33,7 +35,9 @@ class AnalyticsRepository
             ->first();
 
         // Customer stats
-        $newCustomers = Customer::whereBetween('created_at', [$dateFrom, $dateTo])->count();
+        $newCustomers = Customer::whereDate('created_at', '>=', $dateFrom)
+            ->whereDate('created_at', '<=', $dateTo)
+            ->count();
         $totalCustomers = Customer::count();
 
         // Product stats
@@ -74,7 +78,8 @@ class AnalyticsRepository
         $format = $groupBy === 'month' ? 'Y-m' : 'Y-m-d';
         $displayFormat = $groupBy === 'month' ? 'M Y' : 'M d';
 
-        return Order::whereBetween('created_at', [$dateFrom, $dateTo])
+        return Order::whereDate('orders.created_at', '>=', $dateFrom)
+            ->whereDate('orders.created_at', '<=', $dateTo)
             ->select(
                 DB::raw("DATE_FORMAT(created_at, '{$format}') as date"),
                 DB::raw('SUM(grand_total) as total'),
@@ -94,7 +99,8 @@ class AnalyticsRepository
 
     public function getTopProducts(string $dateFrom, string $dateTo, int $limit = 10)
     {
-        return Order::whereBetween('created_at', [$dateFrom, $dateTo])
+        return Order::whereDate('orders.created_at', '>=', $dateFrom)
+            ->whereDate('orders.created_at', '<=', $dateTo)
             ->join('order_items', 'orders.id', '=', 'order_items.order_id')
             ->join('products', 'order_items.product_id', '=', 'products.id')
             ->select(
@@ -111,7 +117,8 @@ class AnalyticsRepository
 
     public function getPaymentBreakdown(string $dateFrom, string $dateTo)
     {
-        return Payment::whereBetween('created_at', [$dateFrom, $dateTo])
+        return Payment::whereDate('created_at', '>=', $dateFrom)
+            ->whereDate('created_at', '<=', $dateTo)
             ->join('payment_methods', 'payments.payment_method_id', '=', 'payment_methods.id')
             ->select(
                 'payment_methods.name',

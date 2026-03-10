@@ -96,7 +96,8 @@
           <input
             v-model="discountPercentInput"
             @input="handleDiscountPercentInput"
-            type="number"
+            type="text"
+            inputmode="numeric"
             placeholder="%"
             class="input-field w-full"
             min="0"
@@ -108,7 +109,9 @@
           <input
             v-model="discountAmountInput"
             @input="handleDiscountAmountInput"
-            type="number"
+            @blur="formatDiscountAmount"
+            type="text"
+            inputmode="numeric"
             placeholder="Rp"
             class="input-field w-full"
             min="0"
@@ -172,23 +175,54 @@ watch(() => props.subtotal, () => {
 });
 
 function handleDiscountPercentInput() {
-  const percent = parseFloat(discountPercentInput.value) || 0;
+  const percent = parseFloat((discountPercentInput.value || '').toString().replace(/[^0-9]/g, '')) || 0;
   if (percent >= 0 && percent <= 100) {
     const amount = Math.round(props.subtotal * (percent / 100));
-    discountAmountInput.value = amount > 0 ? formatNumber(amount) : '';
+    // Format percent display (no thousands separator needed for %)
+    discountPercentInput.value = percent > 0 ? percent.toString() : '';
     emit('set-discount', { percent, amount });
   }
 }
 
 function handleDiscountAmountInput() {
-  const rawAmount = (discountAmountInput.value || '').toString().replace(/[^0-9]/g, '');
+  // Get cursor position before formatting
+  const input = event.target;
+  const cursorPos = input.selectionStart;
+  const oldValue = input.value;
+  
+  // Remove all non-digit characters for calculation
+  const rawAmount = (oldValue || '').toString().replace(/[^0-9]/g, '');
   const amount = parseInt(rawAmount, 10) || 0;
+  
   if (amount >= 0 && amount <= props.subtotal) {
     const percent = props.subtotal > 0 ? Math.round((amount / props.subtotal) * 100) : 0;
-    discountPercentInput.value = percent > 0 ? percent : '';
-    discountAmountInput.value = formatNumber(amount);
+    
+    // Format with thousands separator for display
+    const formattedValue = amount > 0 ? formatNumber(amount) : '';
+    
+    // Update input value with formatted value
+    discountAmountInput.value = formattedValue;
+    
+    // Restore cursor position (adjust for added/removed dots)
+    const newValue = discountAmountInput.value;
+    const diff = newValue.length - oldValue.length;
+    const newCursorPos = Math.min(cursorPos + diff, newValue.length);
+    
+    // Set cursor position after update
+    requestAnimationFrame(() => {
+      input.setSelectionRange(newCursorPos, newCursorPos);
+    });
+    
+    discountPercentInput.value = percent > 0 ? percent.toString() : '';
     emit('set-discount', { percent, amount });
   }
+}
+
+function formatDiscountAmount() {
+  // Format on blur for clean display
+  const rawAmount = (discountAmountInput.value || '').toString().replace(/[^0-9]/g, '');
+  const amount = parseInt(rawAmount, 10) || 0;
+  discountAmountInput.value = amount > 0 ? formatNumber(amount) : '';
 }
 
 function formatNumber(num) {

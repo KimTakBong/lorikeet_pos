@@ -28,13 +28,24 @@ class SendWhatsAppMessage implements ShouldQueue
         $apiKey = config('services.whatsapp_engine.api_key', 'wa-engine-secret-key-2026');
 
         try {
+            $payload = [
+                'phone' => $this->messageQueue->phone,
+            ];
+
+            // If image exists, send as image message
+            if ($this->messageQueue->image_path) {
+                $payload['type'] = 'image';
+                $payload['image_url'] = url($this->messageQueue->image_path);
+                $payload['caption'] = $this->messageQueue->message;
+            } else {
+                $payload['type'] = 'text';
+                $payload['message'] = $this->messageQueue->message;
+            }
+
             $response = Http::withHeaders([
                 'X-API-KEY' => $apiKey,
                 'Content-Type' => 'application/json',
-            ])->timeout(30)->post("{$waEngineUrl}/api/messages/send", [
-                'phone' => $this->messageQueue->phone,
-                'message' => $this->messageQueue->message,
-            ]);
+            ])->timeout(30)->post("{$waEngineUrl}/api/messages/send", $payload);
 
             $result = $response->json();
 
