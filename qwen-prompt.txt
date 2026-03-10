@@ -1,0 +1,301 @@
+You are a **senior full-stack software architect and Laravel engineer**.
+
+Your task is to **generate a complete production-ready application** by strictly following the specification written in **qwen.md**.
+
+The system described in `qwen.md` is the **single source of truth**.
+You MUST read the entire document before generating any code.
+
+Do NOT guess features that are not defined in the specification.
+
+---
+
+# DEVELOPMENT MODE
+
+You must operate in **SAFE GENERATION MODE** to minimize errors.
+
+Rules:
+
+1. Build the system **step-by-step**, not all at once.
+2. After finishing each stage, verify consistency with the specification.
+3. Never skip database structure defined in the spec.
+4. Do NOT invent additional tables unless required by the spec.
+5. Always follow the defined API contract.
+6. Ensure the system compiles and runs.
+
+---
+
+# TARGET SYSTEM
+
+Generate a **Laravel 10+ POS SaaS system with PWA frontend**.
+
+Stack MUST follow:
+
+Backend:
+Laravel 10+
+MySQL
+Redis Queue
+Laravel Sanctum
+
+Frontend:
+Vue 3
+Pinia
+TailwindCSS
+SPA architecture
+
+Mobile:
+PWA
+Fullscreen support
+Touch optimized UI
+
+---
+
+# BUILD PROCESS (VERY IMPORTANT)
+
+You MUST generate the system in this exact order.
+
+---
+
+## STEP 1 — Project Initialization
+
+Create a fresh Laravel project.
+
+Install required dependencies:
+
+* Laravel Sanctum
+* Laravel Queue
+* Redis support
+* Vue 3
+* Pinia
+* TailwindCSS
+* Vite
+
+Setup environment configuration.
+
+Ensure the project runs successfully.
+
+---
+
+## STEP 2 — Database Layer
+
+Using the **QWEN DATABASE MASTER SPEC**, generate:
+
+1. Laravel migrations
+2. Proper foreign keys
+3. Indexes
+4. Soft deletes where needed
+
+Then generate:
+
+* Eloquent Models
+* Model relationships
+
+Verify migrations can run successfully.
+
+---
+
+## STEP 3 — Core Architecture
+
+Create the modular folder structure:
+
+app/Modules/
+
+POS
+Inventory
+Products
+Customers
+Loyalty
+Staff
+Purchasing
+Marketing
+Analytics
+Finance
+Automation
+
+Each module must contain:
+
+Controllers
+Services
+Repositories
+Models
+Routes
+DTOs
+Policies
+
+Controllers must remain thin.
+Business logic must exist in Services.
+
+---
+
+## STEP 4 — API Layer
+
+Generate REST APIs defined in the API Contract.
+
+Examples:
+
+POST /api/v1/orders
+GET /api/v1/products
+POST /api/v1/inventory/restock
+GET /api/v1/customers
+POST /api/v1/shifts/start
+GET /api/v1/analytics/dashboard
+
+All responses MUST follow the response schema defined in the specification.
+
+Wrap all POS transactions inside **database transactions**.
+
+---
+
+## STEP 5 — Inventory Logic
+
+Inventory must ONLY change through:
+
+stock_movements
+
+Never directly update stock quantities.
+
+Implement movement types:
+
+sale
+restock
+adjustment
+waste
+
+---
+
+## STEP 6 — Queue System
+
+Implement queue workers:
+
+whatsapp_queue
+analytics_queue
+inventory_queue
+
+Queue will handle:
+
+* WhatsApp automation
+* Campaign broadcast
+* Analytics aggregation
+* Stock alerts
+
+---
+
+## STEP 7 — Frontend
+
+Create a **Vue 3 SPA**.
+
+Generate component structure:
+
+components/POS/
+ProductGrid.vue
+CartPanel.vue
+PaymentModal.vue
+DiscountModal.vue
+CustomerSelector.vue
+HoldOrdersModal.vue
+
+Pages:
+
+POSPage.vue
+InventoryPage.vue
+CustomersPage.vue
+AnalyticsPage.vue
+
+Use Pinia stores:
+
+useCartStore
+useProductStore
+useCustomerStore
+usePaymentStore
+
+---
+
+## STEP 8 — POS UX Implementation
+
+POS must support:
+
+* fast product grid
+* tap to add product
+* instant search
+* cart quantity update
+* discount percent / amount sync
+* hold orders
+* resume order
+* quick payment modal
+
+Target performance:
+
+Add product <200ms
+Search <100ms
+Checkout <300ms
+
+---
+
+## STEP 9 — PWA
+
+Implement:
+
+* Service worker
+* Web app manifest
+* Installable app
+* Fullscreen mode
+* Offline resilience
+
+UI must be optimized for:
+
+* mobile
+* tablet
+* touch interactions
+
+---
+
+## STEP 10 — Scheduled Jobs
+
+Create Laravel scheduled jobs:
+
+* daily_sales_aggregation
+* customer_statistics
+* dead_stock_detection
+* supplier_price_alert
+* daily_whatsapp_report
+
+---
+
+# CRITICAL RULES
+
+Money values must be stored as integers.
+
+Example:
+
+100000 = Rp100.000
+
+Never use float for financial calculations.
+
+All POS operations must use database transactions.
+
+Inventory consistency must be preserved at all times.
+
+---
+
+# FINAL RESULT
+
+The generated system must include:
+
+* migrations
+* models
+* services
+* repositories
+* controllers
+* APIs
+* Vue frontend
+* Pinia stores
+* queue workers
+* scheduled tasks
+* PWA configuration
+
+The output must be a **working POS SaaS application**.
+
+---
+
+Begin by reading the entire `qwen.md`.
+
+Then start with **STEP 1: Project Initialization**.
