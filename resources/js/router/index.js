@@ -49,7 +49,7 @@ const routes = [
     path: '/products',
     name: 'products',
     component: ProductsPage,
-    meta: { layout: 'admin' },
+    meta: { layout: 'admin', hideNavbarTitle: true },
   },
   {
     path: '/inventory',
@@ -61,7 +61,7 @@ const routes = [
     path: '/orders',
     name: 'orders',
     component: OrdersPage,
-    meta: { layout: 'admin' },
+    meta: { layout: 'admin', hideNavbarTitle: true },
   },
   {
     path: '/customers',

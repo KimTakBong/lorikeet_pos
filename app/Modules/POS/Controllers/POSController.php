@@ -5,6 +5,8 @@ namespace App\Modules\POS\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductPrice;
+use App\Models\ProductCost;
 use App\Models\Customer;
 use App\Models\PaymentMethod;
 use App\Models\Staff;
@@ -13,6 +15,7 @@ use App\Modules\POS\Services\POSService;
 use App\Services\ReceiptImageService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class POSController extends Controller
 {
@@ -116,8 +119,8 @@ class POSController extends Controller
             'scheduled_at' => now(),
         ]);
 
-        // Dispatch job to send immediately
-        \App\Jobs\SendWhatsAppMessage::dispatch($messageQueue);
+        // Queue only - scheduler will process it
+        // Don't block POS response with sendNow()
     }
 
     public function getOrder(Order $order): JsonResponse
@@ -132,18 +135,47 @@ class POSController extends Controller
 
     public function getProducts(Request $request): JsonResponse
     {
-        $query = Product::with(['category', 'prices', 'costs'])
-            ->where('is_active', true);
+        $query = Product::with(['category'])
+            ->where('is_active', true)
+            ->select('products.*')
+            ->leftJoinSub(
+                ProductPrice::select('product_id', 'price')
+                    ->whereIn('id', function ($q) {
+                        $q->select(DB::raw('MAX(id)'))
+                          ->from('product_prices')
+                          ->groupBy('product_id');
+                    }),
+                'latest_prices',
+                'latest_prices.product_id', '=', 'products.id'
+            )
+            ->leftJoinSub(
+                ProductCost::select('product_id', 'cost')
+                    ->whereIn('id', function ($q) {
+                        $q->select(DB::raw('MAX(id)'))
+                          ->from('product_costs')
+                          ->groupBy('product_id');
+                    }),
+                'latest_costs',
+                'latest_costs.product_id', '=', 'products.id'
+            )
+            ->addSelect([
+                'latest_prices.price as current_price',
+                'latest_costs.cost as current_cost',
+            ]);
         
         if ($request->has('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('products.name', 'like', '%' . $search . '%')
+                  ->orWhere('products.sku', 'like', '%' . $search . '%');
+            });
         }
         
         if ($request->has('category_id')) {
-            $query->where('category_id', $request->category_id);
+            $query->where('products.category_id', $request->category_id);
         }
         
-        $products = $query->orderBy('name')->get();
+        $products = $query->orderBy('products.name')->get();
         
         return response()->json([
             'success' => true,
@@ -191,7 +223,9 @@ class POSController extends Controller
 
     public function getPaymentMethods(): JsonResponse
     {
-        $methods = PaymentMethod::where('is_active', true)->get();
+        $methods = cache()->remember('payment_methods_active', 3600, function () {
+            return PaymentMethod::where('is_active', true)->get();
+        });
         
         return response()->json([
             'success' => true,

@@ -15,28 +15,28 @@
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-      <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-700">
         <div class="text-sm text-gray-500 mb-1">Total Sales</div>
         <div class="text-2xl font-bold text-gray-900">Rp {{ formatPrice(stats.sales.total) }}</div>
         <div class="text-xs text-gray-500 mt-1">{{ stats.sales.orders }} orders</div>
       </div>
-      <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-700">
         <div class="text-sm text-gray-500 mb-1">Avg Order</div>
         <div class="text-2xl font-bold text-gray-900">Rp {{ formatPrice(stats.sales.average) }}</div>
       </div>
-      <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-700">
         <div class="text-sm text-gray-500 mb-1">Total Expenses</div>
         <div class="text-2xl font-bold text-red-600">Rp {{ formatPrice(stats.expenses.total) }}</div>
         <div class="text-xs text-gray-500 mt-1">{{ stats.expenses.count }} transactions</div>
       </div>
-      <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-700">
         <div class="text-sm text-gray-500 mb-1">Profit</div>
         <div :class="stats.profit.total >= 0 ? 'text-green-600' : 'text-red-600'" class="text-2xl font-bold">
           Rp {{ formatPrice(stats.profit.total) }}
         </div>
         <div class="text-xs text-gray-500 mt-1">{{ formatNumber(stats.profit.margin) }}% margin</div>
       </div>
-      <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-700">
         <div class="text-sm text-gray-500 mb-1">New Customers</div>
         <div class="text-2xl font-bold text-gray-900">{{ stats.customers.new }}</div>
         <div class="text-xs text-gray-500 mt-1">{{ stats.customers.total }} total</div>
@@ -46,13 +46,13 @@
     <!-- Charts Row -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Sales Trend Chart -->
-      <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-700">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Sales Trend</h3>
         <Line :data="salesChartData" :options="chartOptions" />
       </div>
 
       <!-- Payment Breakdown -->
-      <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-700">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Payment Methods</h3>
         <Doughnut :data="paymentChartData" :options="chartOptions" />
       </div>
@@ -61,7 +61,7 @@
     <!-- Bottom Row -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Top Products -->
-      <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-700">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Top Products</h3>
         <div class="space-y-3">
           <div v-for="(product, index) in topProducts" :key="product.id" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -81,7 +81,7 @@
       </div>
 
       <!-- Recent Orders -->
-      <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-700">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Orders</h3>
         <div class="space-y-3">
           <div v-for="order in recentOrders" :key="order.id" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">

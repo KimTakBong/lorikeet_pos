@@ -1,24 +1,28 @@
 const sendMessage = async (req, res) => {
   try {
-    const { phone, message } = req.body;
+    const { phone, message, type = 'text', image_url, caption } = req.body;
 
-    if (!phone || !message) {
-      return res.status(400).json({
-        success: false,
-        error: 'Phone and message are required',
-      });
+    if (!phone) {
+      return res.status(400).json({ success: false, error: 'Phone is required' });
+    }
+    if (type === 'image' && !image_url) {
+      return res.status(400).json({ success: false, error: 'image_url required for image' });
+    }
+    if (type !== 'image' && !message) {
+      return res.status(400).json({ success: false, error: 'message is required' });
     }
 
     const waService = req.app.get('waService');
-    const result = await waService.sendMessage(phone, message);
 
-    res.json(result);
+    // Respond immediately, send in background
+    waService.sendMessage(phone, message, { type, image_url, caption })
+      .then(result => console.log(`✓ Sent to ${phone}`))
+      .catch(err => console.error(`✗ Failed to ${phone}:`, err.message));
+
+    res.json({ success: true, message: 'Message queued for delivery' });
   } catch (error) {
     console.error('Send message error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to send message',
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 

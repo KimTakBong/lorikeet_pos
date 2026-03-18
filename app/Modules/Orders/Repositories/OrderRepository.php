@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Refund;
 use App\Models\RefundItem;
+use App\Models\StockMovement;
 use Illuminate\Support\Facades\DB;
 
 class OrderRepository
@@ -19,7 +20,9 @@ class OrderRepository
 
     public function getAll(array $filters = [], int $perPage = 20)
     {
-        $query = $this->order->with(['customer', 'staff', 'shift', 'items.product', 'payments.paymentMethod']);
+        $query = $this->order->query()
+            ->select(['id', 'invoice_number', 'customer_id', 'staff_id', 'grand_total', 'payment_status', 'order_status', 'created_at'])
+            ->with(['customer:id,name,phone', 'staff:id,name']);
 
         if (!empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {
@@ -117,13 +120,24 @@ class OrderRepository
                 'reason' => $data['reason'],
             ]);
 
-            // Create refund items
+            // Create refund items & return stock
             foreach ($data['items'] as $item) {
+                $orderItem = $this->orderItem->findOrFail($item['order_item_id']);
+                
                 $this->refundItem->create([
                     'refund_id' => $refund->id,
                     'order_item_id' => $item['order_item_id'],
                     'quantity' => $item['quantity'],
                     'amount' => $item['amount'],
+                ]);
+
+                // Return stock via stock movement
+                \App\Models\StockMovement::create([
+                    'product_id' => $orderItem->product_id,
+                    'movement_type' => 'refund',
+                    'quantity' => abs($item['quantity']), // positive = stock returns
+                    'reference_id' => $refund->id,
+                    'reference_type' => 'refund',
                 ]);
             }
 

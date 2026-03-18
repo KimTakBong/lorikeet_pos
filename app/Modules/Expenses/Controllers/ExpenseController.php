@@ -88,7 +88,9 @@ class ExpenseController extends Controller
 
     public function categories(): JsonResponse
     {
-        $categories = $this->expenseService->getCategories();
+        $categories = cache()->remember('expense_categories', 3600, function () {
+            return $this->expenseService->getCategories();
+        });
 
         return response()->json([
             'success' => true,

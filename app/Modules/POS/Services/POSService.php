@@ -78,8 +78,11 @@ class POSService
             
             if ($order->customer_id) {
                 $this->processLoyaltyPoints($order);
-                $this->queueWhatsAppReceipt($order);
             }
+            
+            // Invalidate dashboard cache
+            cache()->forget('dashboard_stats_' . today()->toDateString());
+            cache()->forget('dashboard_stats_' . now()->subDay()->toDateString());
             
             return $order;
         });

@@ -44,7 +44,7 @@
           class="product-card cursor-pointer transform transition-transform hover:scale-105 active:scale-95"
         >
           <div class="font-medium text-gray-900 truncate">{{ product.name }}</div>
-          <div class="text-blue-600 font-semibold mt-1">Rp {{ formatPrice(product.prices?.[0]?.price || 0) }}</div>
+          <div class="text-blue-600 font-semibold mt-1">Rp {{ formatPrice(product.current_price || 0) }}</div>
           <div v-if="product.category" class="text-xs text-gray-500 mt-1">{{ product.category.name }}</div>
         </div>
       </div>
@@ -135,5 +135,16 @@ onMounted(() => {
 
 .product-card:active {
   transform: scale(0.95);
+}
+
+:root.dark .product-card {
+  background-color: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+:root.dark .product-card:hover {
+  border-color: #60a5fa;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
 }
 </style>

@@ -1,24 +1,24 @@
 <template>
   <div class="space-y-6">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">WhatsApp Settings</h1>
-      <p class="text-gray-500 mt-1">Manage your WhatsApp connection and campaigns</p>
+      <h1 class="text-2xl font-bold text-white">WhatsApp Settings</h1>
+      <p class="text-gray-400 mt-1">Manage your WhatsApp connection and campaigns</p>
     </div>
 
     <!-- Connection Status -->
-    <div class="bg-white rounded-xl shadow-sm p-6">
-      <h2 class="text-lg font-semibold text-gray-900 mb-4">Connection Status</h2>
+    <div class="bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-700">
+      <h2 class="text-lg font-semibold text-white mb-4">Connection Status</h2>
       
-      <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+      <div class="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
         <div class="flex items-center gap-3">
           <div :class="[
             'w-3 h-3 rounded-full',
-            status === 'connected' ? 'bg-green-500' : 
+            status === 'connected' ? 'bg-green-500 animate-pulse' : 
             status === 'qr_required' ? 'bg-yellow-500' : 'bg-red-500'
           ]"></div>
           <div>
-            <div class="font-medium capitalize">{{ status || 'Unknown' }}</div>
-            <div class="text-sm text-gray-500">{{ statusText }}</div>
+            <div class="font-medium text-white capitalize">{{ statusText }}</div>
+            <div class="text-sm text-gray-400">{{ statusDescription }}</div>
           </div>
         </div>
         
@@ -29,12 +29,12 @@
     </div>
 
     <!-- QR Code Section -->
-    <div v-if="status === 'qr_required' && qrCode" class="bg-white rounded-xl shadow-sm p-6">
-      <h2 class="text-lg font-semibold text-gray-900 mb-4">Scan QR Code</h2>
+    <div v-if="status === 'qr_required' && qrCode" class="bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-700">
+      <h2 class="text-lg font-semibold text-white mb-4">Scan QR Code</h2>
       
       <div class="flex flex-col items-center">
-        <img :src="qrCode" alt="WhatsApp QR Code" class="w-64 h-64 border-4 border-gray-200 rounded-lg" />
-        <p class="text-sm text-gray-500 mt-4 text-center">
+        <img :src="qrCode" alt="WhatsApp QR Code" class="w-64 h-64 border-4 border-gray-600 rounded-lg" />
+        <p class="text-sm text-gray-400 mt-4 text-center">
           Open WhatsApp on your phone → Settings → Linked Devices → Link a Device<br/>
           Then scan this QR code
         </p>
@@ -45,14 +45,14 @@
     </div>
 
     <!-- Already Connected -->
-    <div v-if="status === 'connected'" class="bg-green-50 border border-green-200 rounded-xl p-6">
+    <div v-if="status === 'connected'" class="bg-emerald-900/30 border border-emerald-700/50 rounded-xl p-6">
       <div class="flex items-start gap-3">
-        <svg class="w-6 h-6 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-6 h-6 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <div>
-          <h3 class="font-semibold text-green-900">WhatsApp Connected</h3>
-          <p class="text-sm text-green-700 mt-1">
+          <h3 class="font-semibold text-emerald-300">WhatsApp Connected</h3>
+          <p class="text-sm text-emerald-400 mt-1">
             Your WhatsApp is connected and ready to send messages.
           </p>
         </div>
@@ -60,38 +60,38 @@
     </div>
 
     <!-- Actions -->
-    <div class="bg-white rounded-xl shadow-sm p-6">
-      <h2 class="text-lg font-semibold text-gray-900 mb-4">Actions</h2>
+    <div class="bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-700">
+      <h2 class="text-lg font-semibold text-white mb-4">Actions</h2>
       
       <div class="flex gap-3">
         <ButtonDanger @click="confirmLogout" :loading="actionLoading">
           Logout
         </ButtonDanger>
         
-        <ButtonDanger @click="confirmDestroy" variant="outline" :loading="actionLoading">
+        <ButtonSecondary @click="confirmDestroy" :loading="actionLoading">
           Destroy Session
-        </ButtonDanger>
+        </ButtonSecondary>
       </div>
       
-      <p class="text-xs text-gray-500 mt-2">
+      <p class="text-xs text-gray-400 mt-2">
         Logout: Sign out but keep session (can reconnect without QR)<br/>
         Destroy: Delete session completely (will need to scan QR again)
       </p>
     </div>
 
     <!-- Test Message -->
-    <div class="bg-white rounded-xl shadow-sm p-6">
-      <h2 class="text-lg font-semibold text-gray-900 mb-4">Test Connection</h2>
+    <div class="bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-700">
+      <h2 class="text-lg font-semibold text-white mb-4">Test Connection</h2>
       
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-          <input v-model="testPhone" type="tel" placeholder="628123456789" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500" />
+          <label class="block text-sm font-medium text-gray-300 mb-2">Phone Number</label>
+          <input v-model="testPhone" type="tel" placeholder="628123456789" class="input-modern" />
         </div>
         
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Message</label>
-          <textarea v-model="testMessage" rows="3" placeholder="Test message" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500"></textarea>
+          <label class="block text-sm font-medium text-gray-300 mb-2">Message</label>
+          <textarea v-model="testMessage" rows="3" placeholder="Test message" class="input-modern"></textarea>
         </div>
         
         <ButtonPrimary @click="sendTestMessage" :disabled="status !== 'connected'" :loading="sending">
@@ -120,9 +120,17 @@ const testMessage = ref('Hello from WhatsApp Engine!');
 
 const statusText = computed(() => {
   switch (status.value) {
-    case 'connected': return 'WhatsApp is connected and ready';
-    case 'qr_required': return 'Scan QR code to connect';
-    default: return 'WhatsApp is not connected';
+    case 'connected': return 'Connected';
+    case 'qr_required': return 'Scan Required';
+    default: return 'Disconnected';
+  }
+});
+
+const statusDescription = computed(() => {
+  switch (status.value) {
+    case 'connected': return 'WhatsApp is connected and ready to send messages';
+    case 'qr_required': return 'Scan QR code to connect your WhatsApp';
+    default: return 'WhatsApp engine is not connected';
   }
 });
 

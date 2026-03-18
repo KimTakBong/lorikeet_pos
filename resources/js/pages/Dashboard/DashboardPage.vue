@@ -73,29 +73,29 @@
       <div class="bg-white rounded-xl shadow-sm p-6">
         <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <router-link to="/pos" class="flex flex-col items-center p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
+          <router-link to="/pos" class="flex flex-col items-center p-4 bg-indigo-600/20 rounded-xl hover:bg-indigo-600/30 transition-all cursor-pointer">
             <svg class="w-8 h-8 text-indigo-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 36v-3m-3 3h.01M9 17h.01M9 21h5.137c.448 0 .667 0 .847-.072a1 1 0 00.364-.244c.13-.149.195-.374.325-.823L17 12l-1.724-5.173c-.13-.449-.195-.674-.325-.823a1 1 0 00-.364-.244c-.18-.072-.4-.072-.847-.072H9" />
             </svg>
-            <span class="text-sm font-medium text-gray-700">New Sale</span>
+            <span class="text-sm font-medium text-white">New Sale</span>
           </router-link>
-          <router-link to="/products" class="flex flex-col items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+          <router-link to="/products" class="flex flex-col items-center p-4 bg-emerald-600/20 rounded-xl hover:bg-emerald-600/30 transition-all cursor-pointer">
             <svg class="w-8 h-8 text-green-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            <span class="text-sm font-medium text-gray-700">Add Product</span>
+            <span class="text-sm font-medium text-white">Add Product</span>
           </router-link>
-          <router-link to="/orders" class="flex flex-col items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+          <router-link to="/orders" class="flex flex-col items-center p-4 bg-blue-600/20 rounded-xl hover:bg-blue-600/30 transition-all cursor-pointer">
             <svg class="w-8 h-8 text-blue-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <span class="text-sm font-medium text-gray-700">Orders</span>
+            <span class="text-sm font-medium text-white">Orders</span>
           </router-link>
-          <router-link to="/analytics" class="flex flex-col items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+          <router-link to="/analytics" class="flex flex-col items-center p-4 bg-purple-600/20 rounded-xl hover:bg-purple-600/30 transition-all cursor-pointer">
             <svg class="w-8 h-8 text-purple-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
-            <span class="text-sm font-medium text-gray-700">Analytics</span>
+            <span class="text-sm font-medium text-white">Analytics</span>
           </router-link>
         </div>
       </div>
@@ -147,29 +147,16 @@ async function loadDashboardData() {
   try {
     loading.value = true;
     
-    // Load today's sales and orders
-    const today = new Date().toISOString().split('T')[0];
-    const ordersResponse = await axios.get('/api/v1/orders', {
-      headers: { Authorization: `Bearer ${token}` },
-      params: { date_from: today, date_to: today }
-    });
-    
-    const ordersData = ordersResponse.data.data?.data || [];
-    stats.todaySales = ordersData.reduce((sum, order) => sum + order.grand_total, 0);
-    stats.todayOrders = ordersData.length;
-    recentOrders.value = ordersData.slice(0, 5);
-    
-    // Load products count
-    const productsResponse = await axios.get('/api/v1/products', {
+    const response = await axios.get('/api/v1/dashboard/stats', {
       headers: { Authorization: `Bearer ${token}` }
     });
-    stats.totalProducts = productsResponse.data.data?.total || 0;
     
-    // Load customers count
-    const customersResponse = await axios.get('/api/v1/customers', {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    stats.totalCustomers = customersResponse.data.data?.total || 0;
+    const data = response.data.data;
+    stats.todaySales = data.today_sales;
+    stats.todayOrders = data.today_orders;
+    stats.totalProducts = data.total_products;
+    stats.totalCustomers = data.total_customers;
+    recentOrders.value = data.recent_orders;
     
   } catch (e) {
     console.error('Failed to load dashboard data:', e);

@@ -64,11 +64,17 @@ class Product extends Model
 
     public function getCurrentPriceAttribute(): ?int
     {
+        if ($this->relationLoaded('prices') && $this->prices->isNotEmpty()) {
+            return $this->prices->sortByDesc('effective_from')->first()->price;
+        }
         return $this->prices()->latest('effective_from')->first()?->price;
     }
 
     public function getCurrentCostAttribute(): ?int
     {
+        if ($this->relationLoaded('costs') && $this->costs->isNotEmpty()) {
+            return $this->costs->sortByDesc('effective_from')->first()->cost;
+        }
         return $this->costs()->latest('effective_from')->first()?->cost;
     }
 }

@@ -3,15 +3,15 @@
 namespace App\Modules\Analytics\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Order;
 use App\Models\Customer;
-use App\Models\Product;
 use App\Models\Expense;
+use App\Models\Order;
 use App\Models\Payment;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
+use App\Models\Product;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AnalyticsController extends Controller
 {
@@ -67,26 +67,23 @@ class AnalyticsController extends Controller
                 ];
             });
 
-        // Top products - simplified
-        $topProducts = collect();
-        try {
-            $topProducts = Order::whereDate('created_at', '>=', $dateFrom)
-                ->whereDate('created_at', '<=', $dateTo)
-                ->join('order_items', 'orders.id', '=', 'order_items.order_id')
-                ->join('products', 'order_items.product_id', '=', 'products.id')
-                ->select(
-                    'products.id',
-                    'products.name',
-                    DB::raw('COALESCE(SUM(order_items.quantity), 0) as quantity_sold'),
-                    DB::raw('COALESCE(SUM(order_items.total), 0) as revenue')
-                )
-                ->groupBy('products.id', 'products.name')
-                ->orderBy('quantity_sold', 'desc')
-                ->limit(5)
-                ->get();
-        } catch (\Exception $e) {
-            // Skip if tables don't exist
-        }
+        // Top products
+        $topProducts = Order::whereBetween('orders.created_at', [
+            Carbon::parse($dateFrom)->startOfDay(),
+            Carbon::parse($dateTo)->endOfDay(),
+        ])
+            ->join('order_items', 'orders.id', '=', 'order_items.order_id')
+            ->join('products', 'order_items.product_id', '=', 'products.id')
+            ->select(
+                'products.id',
+                'products.name',
+                DB::raw('COALESCE(SUM(order_items.quantity), 0) as quantity_sold'),
+                DB::raw('COALESCE(SUM(order_items.total), 0) as revenue')
+            )
+            ->groupBy('products.id', 'products.name')
+            ->orderByDesc('quantity_sold')
+            ->limit(5)
+            ->get();
 
         // Payment breakdown
         $paymentBreakdown = Payment::whereDate('payments.created_at', '>=', $dateFrom)
@@ -124,7 +121,7 @@ class AnalyticsController extends Controller
                     ],
                     'profit' => [
                         'total' => (int) $salesStats->total_sales - (int) $expenseStats->total_expenses,
-                        'margin' => $salesStats->total_sales > 0 
+                        'margin' => $salesStats->total_sales > 0
                             ? round((((int) $salesStats->total_sales - (int) $expenseStats->total_expenses) / (int) $salesStats->total_sales) * 100, 1)
                             : 0,
                     ],
@@ -150,7 +147,10 @@ class AnalyticsController extends Controller
         $dateTo = $request->query('date_to', now()->endOfMonth());
         $limit = $request->query('limit', 10);
 
-        $products = Order::whereBetween('created_at', [$dateFrom, $dateTo])
+        $products = Order::whereBetween('orders.created_at', [
+            Carbon::parse($dateFrom)->startOfDay(),
+            Carbon::parse($dateTo)->endOfDay(),
+        ])
             ->join('order_items', 'orders.id', '=', 'order_items.order_id')
             ->join('products', 'order_items.product_id', '=', 'products.id')
             ->select(
@@ -160,7 +160,7 @@ class AnalyticsController extends Controller
                 DB::raw('COALESCE(SUM(order_items.total), 0) as revenue')
             )
             ->groupBy('products.id', 'products.name')
-            ->orderBy('quantity_sold', 'desc')
+            ->orderByDesc('quantity_sold')
             ->limit($limit)
             ->get();
 
@@ -175,7 +175,10 @@ class AnalyticsController extends Controller
         $dateFrom = $request->query('date_from', now()->startOfMonth());
         $dateTo = $request->query('date_to', now()->endOfMonth());
 
-        $breakdown = Payment::whereBetween('created_at', [$dateFrom, $dateTo])
+        $breakdown = Payment::whereBetween('payments.created_at', [
+            Carbon::parse($dateFrom)->startOfDay(),
+            Carbon::parse($dateTo)->endOfDay(),
+        ])
             ->join('payment_methods', 'payments.payment_method_id', '=', 'payment_methods.id')
             ->select(
                 'payment_methods.name',
@@ -183,7 +186,7 @@ class AnalyticsController extends Controller
                 DB::raw('COALESCE(COUNT(payments.id), 0) as count')
             )
             ->groupBy('payment_methods.name')
-            ->orderBy('total', 'desc')
+            ->orderByDesc('total')
             ->get();
 
         return response()->json([

@@ -26,15 +26,15 @@
     </div>
 
     <!-- Active Shifts Banner -->
-    <div v-if="activeShifts.length > 0" class="bg-green-50 border border-green-200 rounded-xl p-4">
+    <div v-if="activeShifts.length > 0" class="bg-emerald-900/30 border border-emerald-700/50 rounded-xl p-4">
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-2">
           <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          <h3 class="font-semibold text-green-900">Active Shifts Today</h3>
+          <h3 class="font-semibold text-emerald-300">Active Shifts Today</h3>
         </div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div v-for="shift in activeShifts" :key="shift.id" class="bg-white rounded-lg p-4 border border-green-200">
+        <div v-for="shift in activeShifts" :key="shift.id" class="bg-gray-800 rounded-lg p-4 border border-emerald-700/30">
           <div class="flex justify-between items-start mb-2">
             <div>
               <div class="font-medium">{{ shift.staff.name }}</div>
@@ -44,7 +44,7 @@
               End Shift
             </ButtonSecondary>
           </div>
-          <div class="text-sm text-green-600">Opening: Rp {{ formatPrice(shift.opening_cash) }}</div>
+          <div class="text-sm text-emerald-400">Opening: Rp {{ formatPrice(shift.opening_cash) }}</div>
         </div>
       </div>
     </div>

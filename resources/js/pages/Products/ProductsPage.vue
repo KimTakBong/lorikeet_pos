@@ -1,50 +1,79 @@
 <template>
   <div class="space-y-6">
-    <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-900">Products</h1>
-      <ButtonPrimary @click="openCreateModal">
-        <Plus class="w-4 h-4" />
-        Add Product
-      </ButtonPrimary>
+    <!-- Filter Card with Header & Add Button -->
+    <div class="bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-700">
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h1 class="text-xl font-bold text-white">Products</h1>
+          <p class="text-gray-400 mt-1">Manage your product catalog</p>
+        </div>
+        <ButtonPrimary @click="openCreateModal">
+          <Plus class="w-4 h-4" />
+          Add Product
+        </ButtonPrimary>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-400 mb-2">Search</label>
+          <input v-model="filters.search" @input="debouncedSearch" type="text" placeholder="Product name or SKU..." class="w-full border border-gray-600 rounded-lg px-4 py-2 bg-gray-700 text-white" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-400 mb-2">Category</label>
+          <select v-model="filters.category_id" @change="tableRef?.refresh()" class="w-full border border-gray-600 rounded-lg px-4 py-2 bg-gray-700 text-white">
+            <option value="">All Categories</option>
+            <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-400 mb-2">Status</label>
+          <select v-model="filters.is_active" @change="tableRef?.refresh()" class="w-full border border-gray-600 rounded-lg px-4 py-2 bg-gray-700 text-white">
+            <option value="">All</option>
+            <option value="1">Active</option>
+            <option value="0">Inactive</option>
+          </select>
+        </div>
+      </div>
     </div>
 
-    <DataTable ref="tableRef" :columns="columns" :fetch-data="fetchProducts" search-placeholder="Search products..." empty-message="No products found">
-      <template #toolbar>
-        <ButtonSecondary @click="refreshCategories">Refresh</ButtonSecondary>
-      </template>
-
+    <!-- Products Table -->
+    <DataTable ref="tableRef" :columns="columns" :fetch-data="fetchProducts" search-placeholder="" empty-message="No products found" :show-toolbar="false">
       <template #cell-name="{ item }">
-        <div class="font-medium text-gray-900">{{ item.name }}</div>
+        <div class="font-semibold text-white">{{ item.name }}</div>
       </template>
 
       <template #cell-sku="{ item }">
-        <code class="text-sm text-gray-500">{{ item.sku }}</code>
+        <code class="text-sm text-gray-400 bg-gray-700 px-2 py-0.5 rounded">{{ item.sku }}</code>
       </template>
 
       <template #cell-category_id="{ item }">
-        {{ item.category?.name || '-' }}
+        <span class="text-gray-300">{{ item.category?.name || '-' }}</span>
       </template>
 
       <template #cell-price="{ item }">
-        <span class="font-medium">Rp {{ formatPrice(item.prices?.[0]?.price || 0) }}</span>
+        <span class="font-semibold text-white">Rp {{ formatPrice(item.current_price || 0) }}</span>
       </template>
 
       <template #cell-cost="{ item }">
-        <span class="text-gray-500">Rp {{ formatPrice(item.costs?.[0]?.cost || 0) }}</span>
+        <span class="text-gray-400">Rp {{ formatPrice(item.current_cost || 0) }}</span>
       </template>
 
       <template #cell-is_active="{ item }">
-        <span :class="item.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="px-2 py-1 text-xs font-medium rounded-full">{{ item.is_active ? 'Active' : 'Inactive' }}</span>
+        <span v-if="item.is_active" class="badge badge-success">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Active
+        </span>
+        <span v-else class="badge badge-danger">
+          <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Inactive
+        </span>
       </template>
 
       <template #actions="{ item }">
         <div class="flex justify-end gap-2">
-          <ButtonIcon variant="primary" @click="openEditModal(item)">
-            <Edit class="w-5 h-5" />
-          </ButtonIcon>
-          <ButtonIcon variant="danger" @click="confirmDelete(item)">
-            <Trash class="w-5 h-5" />
-          </ButtonIcon>
+          <button @click="openEditModal(item)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600/30 rounded-lg text-sm font-medium transition-colors">
+            <Edit class="w-4 h-4" />Edit
+          </button>
+          <button @click="confirmDelete(item)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600/20 text-red-400 hover:bg-red-600/30 rounded-lg text-sm font-medium transition-colors">
+            <Trash class="w-4 h-4" />Delete
+          </button>
         </div>
       </template>
     </DataTable>
@@ -54,34 +83,30 @@
       <template #default="{ loading }">
         <div class="grid grid-cols-2 gap-4">
           <div class="col-span-2">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Product Name *</label>
-            <input v-model="form.name" type="text" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500" placeholder="e.g., Latte" />
+            <label class="block text-sm font-medium text-gray-300 mb-2">Product Name *</label>
+            <input v-model="form.name" type="text" required class="input-modern" placeholder="e.g., Latte" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">SKU *</label>
-            <input v-model="form.sku" type="text" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500" placeholder="e.g., LAT001" />
+            <label class="block text-sm font-medium text-gray-300 mb-2">SKU *</label>
+            <input v-model="form.sku" type="text" required class="input-modern" placeholder="e.g., LAT001" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-            <SearchSelect
-              v-model="form.category_id"
-              :options="categories"
-              placeholder="Select category"
-              search-placeholder="Search categories..."
-              option-label="name"
-              option-value="id"
-            />
+            <label class="block text-sm font-medium text-gray-300 mb-2">Category</label>
+            <SearchSelect v-model="form.category_id" :options="categories" placeholder="Select category" search-placeholder="Search categories..." option-label="name" option-value="id" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Price (Rp) *</label>
+            <label class="block text-sm font-medium text-gray-300 mb-2">Price (Rp) *</label>
             <CurrencyInput v-model="form.price" required placeholder="25000" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Cost (Rp)</label>
+            <label class="block text-sm font-medium text-gray-300 mb-2">Cost (Rp)</label>
             <CurrencyInput v-model="form.cost" placeholder="12000" />
           </div>
           <div class="col-span-2">
-            <label class="flex items-center"><input v-model="form.is_active" type="checkbox" class="w-4 h-4 text-indigo-600 rounded" /><span class="ml-2 text-sm text-gray-700">Active</span></label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input v-model="form.is_active" type="checkbox" class="w-4 h-4 text-indigo-600 rounded border-gray-600" />
+              <span class="text-sm text-gray-300">Active</span>
+            </label>
           </div>
         </div>
       </template>
@@ -90,15 +115,13 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import axios from 'axios';
 import DataTable from '../../components/tables/DataTable.vue';
 import FormModal from '../../components/forms/FormModal.vue';
 import CurrencyInput from '../../components/forms/CurrencyInput.vue';
 import SearchSelect from '../../components/forms/SearchSelect.vue';
 import ButtonPrimary from '../../components/ui/ButtonPrimary.vue';
-import ButtonSecondary from '../../components/ui/ButtonSecondary.vue';
-import ButtonIcon from '../../components/ui/ButtonIcon.vue';
 import AlertService from '../../components/alerts/AlertService.js';
 import { Plus, Edit, Trash } from 'lucide-vue-next';
 
@@ -108,24 +131,35 @@ const isEdit = ref(false);
 const categories = ref([]);
 const selectedProduct = ref(null);
 
+const filters = reactive({ search: '', category_id: '', is_active: '' });
+
 const columns = {
   name: { label: 'Product', sortable: true },
   sku: { label: 'SKU', sortable: true },
   category_id: { label: 'Category', sortable: true },
-  price: { label: 'Price', sortable: true, format: 'currency' },
-  cost: { label: 'Cost', format: 'currency' },
+  price: { label: 'Price', sortable: true },
+  cost: { label: 'Cost' },
   is_active: { label: 'Status', sortable: true }
 };
 
 const form = reactive({ name: '', sku: '', category_id: '', price: 0, cost: 0, is_active: true });
 
+let searchTimeout;
+function debouncedSearch() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => tableRef.value?.refresh(), 300);
+}
+
 async function fetchProducts(params) {
   const token = localStorage.getItem('token');
-  const response = await axios.get('/api/v1/products', { headers: { Authorization: `Bearer ${token}` }, params });
+  const response = await axios.get('/api/v1/products', {
+    headers: { Authorization: `Bearer ${token}` },
+    params: { ...params, search: filters.search, category_id: filters.category_id, is_active: filters.is_active }
+  });
   return response.data.data;
 }
 
-async function refreshCategories() {
+async function loadCategories() {
   try {
     const token = localStorage.getItem('token');
     const response = await axios.get('/api/v1/categories', { headers: { Authorization: `Bearer ${token}` } });
@@ -137,7 +171,7 @@ function openCreateModal() {
   isEdit.value = false;
   selectedProduct.value = null;
   Object.assign(form, { name: '', sku: '', category_id: '', price: 0, cost: 0, is_active: true });
-  refreshCategories();
+  loadCategories();
   showModal.value = true;
 }
 
@@ -148,11 +182,11 @@ function openEditModal(product) {
     name: product.name,
     sku: product.sku,
     category_id: product.category_id || '',
-    price: product.prices?.[0]?.price || 0,
-    cost: product.costs?.[0]?.cost || 0,
+    price: product.current_price || 0,
+    cost: product.current_cost || 0,
     is_active: product.is_active
   });
-  refreshCategories();
+  loadCategories();
   showModal.value = true;
 }
 
@@ -160,14 +194,8 @@ async function handleSubmit({ setLoading, setError }) {
   try {
     const token = localStorage.getItem('token');
     const config = { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } };
-    
-    // Ensure price and cost are raw numbers (not formatted)
-    const payload = {
-      ...form,
-      price: parseInt(form.price) || 0,
-      cost: parseInt(form.cost) || 0
-    };
-    
+    const payload = { ...form, price: parseInt(form.price) || 0, cost: parseInt(form.cost) || 0 };
+
     if (isEdit.value) {
       await axios.put(`/api/v1/products/${selectedProduct.value.id}`, payload, config);
       AlertService.success('Product updated successfully');
@@ -197,4 +225,6 @@ async function confirmDelete(product) {
 }
 
 function formatPrice(price) { return new Intl.NumberFormat('id-ID').format(price); }
+
+onMounted(() => { loadCategories(); });
 </script>

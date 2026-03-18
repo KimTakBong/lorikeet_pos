@@ -1,8 +1,9 @@
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const QRCode = require('qrcode');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const tmp = require('tmp');
 
 class WhatsAppService {
   constructor(options = {}) {
@@ -180,7 +181,9 @@ class WhatsAppService {
     }
   }
 
-  async sendMessage(phone, message) {
+  async sendMessage(phone, message, options = {}) {
+    const { type = 'text', image_url, caption } = options;
+    
     return new Promise((resolve, reject) => {
       if (this.status !== 'connected') {
         return reject(new Error('WhatsApp not connected'));
@@ -188,11 +191,14 @@ class WhatsAppService {
 
       // Format phone number
       const formattedPhone = this.formatPhoneNumber(phone);
-      
+
       // Add to queue
       this.messageQueue.push({
         phone: formattedPhone,
         message,
+        type,
+        image_url,
+        caption,
         resolve,
         reject,
         attempts: 0,
@@ -217,29 +223,33 @@ class WhatsAppService {
       const job = this.messageQueue.shift();
 
       try {
-        await this.sendWhatsAppMessage(job.phone, job.message);
+        if (job.type === 'image') {
+          await this.sendWhatsAppImage(job.phone, job.image_url, job.caption || job.message);
+        } else {
+          await this.sendWhatsAppMessage(job.phone, job.message);
+        }
         job.resolve({ success: true, phone: job.phone });
       } catch (error) {
         console.error('Send message error:', error);
 
         // Check if it's a detached frame error - requires client restart
-        const isDetachedError = error.message.includes('detached') || 
+        const isDetachedError = error.message.includes('detached') ||
                                 error.message.includes('Target closed') ||
                                 error.message.includes('Session closed');
 
         if (isDetachedError) {
           // Put job back and attempt client restart
           this.messageQueue.unshift(job);
-          
+
           console.log('🔄 Attempting to restart WhatsApp client...');
           const restartSuccess = await this.restartClient();
-          
+
           if (!restartSuccess) {
             // If restart fails, fail the job
             job.reject({ success: false, error: 'Failed to restart WhatsApp client' });
             continue;
           }
-          
+
           // Retry immediately after restart
           continue;
         }
@@ -276,7 +286,7 @@ class WhatsAppService {
 
       // Send message with timeout
       const sendPromise = this.client.sendMessage(chatId, message);
-      const timeoutPromise = new Promise((_, reject) => 
+      const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Message send timeout')), 30000)
       );
 
@@ -286,7 +296,7 @@ class WhatsAppService {
       return { success: true };
     } catch (error) {
       // Check if it's a detached frame error
-      const isDetachedError = error.message.includes('detached') || 
+      const isDetachedError = error.message.includes('detached') ||
                               error.message.includes('Target closed') ||
                               error.message.includes('Session closed');
 
@@ -297,6 +307,56 @@ class WhatsAppService {
       }
 
       console.error(`Failed to send to ${phone}:`, error.message);
+      throw error;
+    }
+  }
+
+  async sendWhatsAppImage(phone, imageUrl, caption = '') {
+    try {
+      const chatId = `${phone}@c.us`;
+
+      if (!this.client || !this.client.info) {
+        throw new Error('WhatsApp client not initialized');
+      }
+
+      console.log(`📷 Downloading image from: ${imageUrl}`);
+
+      // Download image from URL
+      const response = await axios.get(imageUrl, {
+        responseType: 'arraybuffer',
+        timeout: 30000,
+      });
+
+      // Create temp file
+      const tempFile = tmp.fileSync({ postfix: '.png' });
+      fs.writeFileSync(tempFile.name, response.data);
+
+      console.log(`📷 Image downloaded to: ${tempFile.name}`);
+
+      // Create MessageMedia
+      const media = new MessageMedia(
+        response.headers['content-type'] || 'image/png',
+        response.data.toString('base64'),
+        'receipt.png'
+      );
+
+      // Send image with timeout
+      const sendPromise = this.client.sendMessage(chatId, media, {
+        caption: caption,
+      });
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Image send timeout')), 30000)
+      );
+
+      await Promise.race([sendPromise, timeoutPromise]);
+
+      // Cleanup temp file
+      tempFile.removeCallback();
+
+      console.log(`✅ Image sent to ${phone}`);
+      return { success: true };
+    } catch (error) {
+      console.error(`Failed to send image to ${phone}:`, error.message);
       throw error;
     }
   }
@@ -329,11 +389,17 @@ class WhatsAppService {
 
   async logout() {
     try {
-      await this.client.logout();
+      if (this.client) {
+        await this.client.logout().catch(() => {});
+      }
       this.status = 'disconnected';
       this.qrCode = null;
       this.qrCodeDataUrl = null;
-      return { success: true };
+
+      // Reinitialize to generate new QR
+      setTimeout(() => this.initialize(), 1000);
+
+      return { success: true, message: 'Logged out, reinitializing...' };
     } catch (error) {
       return { success: false, error: error.message };
     }
@@ -341,7 +407,9 @@ class WhatsAppService {
 
   async destroySession() {
     try {
-      await this.client.destroy();
+      if (this.client) {
+        await this.client.destroy().catch(() => {});
+      }
       // Clear session files
       const sessionDir = path.join(__dirname, '..', this.sessionPath);
       if (fs.existsSync(sessionDir)) {
@@ -351,7 +419,11 @@ class WhatsAppService {
       this.status = 'disconnected';
       this.qrCode = null;
       this.qrCodeDataUrl = null;
-      return { success: true };
+
+      // Reinitialize to generate new QR
+      setTimeout(() => this.initialize(), 1000);
+
+      return { success: true, message: 'Session destroyed, reinitializing...' };
     } catch (error) {
       return { success: false, error: error.message };
     }

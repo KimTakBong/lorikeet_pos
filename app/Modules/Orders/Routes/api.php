@@ -11,4 +11,5 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     // Refunds
     Route::post('/orders/{id}/refund', [OrderController::class, 'refund']);
     Route::get('/orders/{id}/refund', [OrderController::class, 'getRefund']);
+    Route::post('/orders/{id}/send-receipt', [OrderController::class, 'sendReceipt']);
 });

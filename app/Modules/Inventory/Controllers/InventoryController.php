@@ -99,7 +99,9 @@ class InventoryController extends Controller
 
     public function suppliers(): JsonResponse
     {
-        $suppliers = $this->inventoryService->getSuppliers();
+        $suppliers = cache()->remember('suppliers_list', 3600, function () {
+            return $this->inventoryService->getSuppliers();
+        });
 
         return response()->json([
             'success' => true,

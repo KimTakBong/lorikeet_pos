@@ -14,6 +14,9 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static files from public directory
+app.use(express.static('public'));
+
 // API Key middleware
 const authenticateAPI = (req, res, next) => {
   const apiKey = req.headers['x-api-key'];

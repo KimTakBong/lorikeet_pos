@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductPrice;
 use App\Models\ProductCost;
+use Illuminate\Support\Facades\DB;
 
 class ProductRepository
 {
@@ -18,24 +19,56 @@ class ProductRepository
 
     public function getAll(array $filters = [], int $perPage = 20)
     {
-        $query = $this->product->with(['category', 'prices', 'costs']);
+        $query = $this->product->with(['category'])
+            ->select('products.*')
+            ->leftJoinSub(
+                ProductPrice::select('product_id', 'price')
+                    ->whereIn('id', function ($q) {
+                        $q->select(DB::raw('MAX(id)'))
+                          ->from('product_prices')
+                          ->groupBy('product_id');
+                    }),
+                'latest_prices',
+                'latest_prices.product_id', '=', 'products.id'
+            )
+            ->leftJoinSub(
+                ProductCost::select('product_id', 'cost')
+                    ->whereIn('id', function ($q) {
+                        $q->select(DB::raw('MAX(id)'))
+                          ->from('product_costs')
+                          ->groupBy('product_id');
+                    }),
+                'latest_costs',
+                'latest_costs.product_id', '=', 'products.id'
+            )
+            ->addSelect([
+                'latest_prices.price as current_price',
+                'latest_costs.cost as current_cost',
+            ]);
 
         if (!empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {
-                $q->where('name', 'like', '%' . $filters['search'] . '%')
-                  ->orWhere('sku', 'like', '%' . $filters['search'] . '%');
+                $q->where('products.name', 'like', '%' . $filters['search'] . '%')
+                  ->orWhere('products.sku', 'like', '%' . $filters['search'] . '%');
             });
         }
 
         if (!empty($filters['category_id'])) {
-            $query->where('category_id', $filters['category_id']);
+            $query->where('products.category_id', $filters['category_id']);
+        }
+
+        if (!empty($filters['is_active'])) {
+            $query->where('products.is_active', $filters['is_active']);
         }
 
         if (!empty($filters['sort_by'])) {
             $direction = $filters['sort_direction'] ?? 'asc';
-            $query->orderBy($filters['sort_by'], $direction);
+            $column = in_array($filters['sort_by'], ['current_price', 'current_cost']) 
+                ? $filters['sort_by'] 
+                : 'products.' . $filters['sort_by'];
+            $query->orderBy($column, $direction);
         } else {
-            $query->orderBy('name', 'asc');
+            $query->orderBy('products.name', 'asc');
         }
 
         return $query->paginate($perPage);

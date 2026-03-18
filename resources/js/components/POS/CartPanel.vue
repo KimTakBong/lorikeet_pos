@@ -71,6 +71,7 @@
           v-model="customerPhone"
           @input="handlePhoneInput"
           @keyup.enter="findCustomer"
+          @focus="resetCustomerState"
           type="tel"
           placeholder="WhatsApp: 08... (auto send receipt)"
           class="input-field flex-1"
@@ -78,15 +79,30 @@
         <ButtonSecondary @click="findCustomer" :loading="findingCustomer">Find</ButtonSecondary>
       </div>
       
-      <!-- WhatsApp Receipt Status -->
-      <div v-if="customerPhone && isValidPhone" class="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+      <!-- WhatsApp Receipt Status - Only show after Find pressed -->
+      <div v-if="customerFound && customer" class="flex items-center justify-between bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2">
         <div class="flex items-center gap-2">
-          <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+          <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
-          <span class="text-sm text-green-800 font-medium">{{ formattedPhone }}</span>
+          <span class="text-sm text-green-300 font-medium">{{ customer.name }}</span>
         </div>
-        <span class="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">Auto send receipt ✓</span>
+        <span class="text-xs text-green-400 bg-green-500/10 px-2 py-1 rounded">Auto receipt ✓</span>
+      </div>
+
+      <!-- Customer not found - show create input -->
+      <div v-if="customerNotFound" class="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 space-y-2">
+        <p class="text-sm text-amber-300">Customer not found. Create new?</p>
+        <div class="flex gap-2">
+          <input
+            v-model="newCustomerName"
+            @keyup.enter="createNewCustomer"
+            type="text"
+            placeholder="Customer name (optional)"
+            class="input-field flex-1 text-sm"
+          />
+          <ButtonSecondary @click="createNewCustomer" size="sm">Save</ButtonSecondary>
+        </div>
       </div>
       
       <!-- Discount Inputs (Percent & Amount) -->
@@ -145,6 +161,9 @@ const emit = defineEmits(['update-quantity', 'checkout', 'set-customer', 'set-di
 
 const customerPhone = ref('');
 const findingCustomer = ref(false);
+const customerFound = ref(false);
+const customerNotFound = ref(false);
+const newCustomerName = ref('');
 const discountPercentInput = ref('');
 const discountAmountInput = ref('');
 const customer = ref(null);
@@ -230,6 +249,12 @@ function formatNumber(num) {
   return new Intl.NumberFormat('id-ID').format(num);
 }
 
+function resetCustomerState() {
+  customerFound.value = false;
+  customerNotFound.value = false;
+  customer.value = null;
+  newCustomerName.value = "";
+}
 function handlePhoneInput() {
   // Auto-format phone number as user types
   let phone = customerPhone.value.replace(/\D/g, ''); // Remove non-digits
@@ -255,13 +280,18 @@ async function findCustomer() {
   if (!customerPhone.value) return;
   
   // Convert phone format: 08... → 628...
-  let phone = customerPhone.value.replace(/\D/g, ''); // Remove non-digits
+  let phone = customerPhone.value.replace(/\D/g, '');
   if (phone.startsWith('0')) {
     phone = '62' + phone.slice(1);
   }
   customerPhone.value = phone;
   
   findingCustomer.value = true;
+  customerFound.value = false;
+  customerNotFound.value = false;
+  customer.value = null;
+  newCustomerName.value = '';
+  
   try {
     const token = localStorage.getItem('token');
     const response = await axios.get('/api/v1/customers', {
@@ -272,22 +302,42 @@ async function findCustomer() {
     const customers = response.data.data?.data || response.data.data || [];
     if (customers.length > 0) {
       customer.value = customers[0];
+      customerFound.value = true;
       emit('set-customer', customer.value);
+      emit('set-customer-phone', phone);
     } else {
-      // Create new customer
-      const createResponse = await axios.post('/api/v1/customers', {
-        name: 'Walk-in Customer',
-        phone: phone
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      customer.value = createResponse.data.data;
-      emit('set-customer', customer.value);
+      customerNotFound.value = true;
+      emit('set-customer-phone', phone);
     }
   } catch (e) {
     console.error('Failed to find customer:', e);
   } finally {
     findingCustomer.value = false;
+  }
+}
+
+async function createNewCustomer() {
+  if (!customerPhone.value) return;
+  
+  let phone = customerPhone.value.replace(/\D/g, '');
+  if (phone.startsWith('0')) {
+    phone = '62' + phone.slice(1);
+  }
+  
+  try {
+    const token = localStorage.getItem('token');
+    const createResponse = await axios.post('/api/v1/customers', {
+      name: newCustomerName.value.trim() || 'Walk-in Customer',
+      phone: phone
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    customer.value = createResponse.data.data;
+    customerFound.value = true;
+    customerNotFound.value = false;
+    emit('set-customer', customer.value);
+  } catch (e) {
+    console.error('Failed to create customer:', e);
   }
 }
 
@@ -323,5 +373,23 @@ function formatPrice(price) {
   outline: none;
   border-color: #6366f1;
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+/* Dark mode for POS cart */
+:root.dark .cart-panel {
+  background-color: #0f172a;
+  border-left-color: #1e293b;
+}
+:root.dark .cart-item {
+  background-color: #1e293b;
+}
+:root.dark .input-field {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
+:root.dark .action-bar {
+  background-color: #0f172a;
+  border-top-color: #1e293b;
 }
 </style>

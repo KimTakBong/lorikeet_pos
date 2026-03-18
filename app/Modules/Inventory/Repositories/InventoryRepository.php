@@ -21,29 +21,48 @@ class InventoryRepository
 
     public function getStockLevels(array $filters = [], int $perPage = 20)
     {
-        $query = $this->product->with(['category', 'prices', 'costs'])
-            ->select('products.*', DB::raw('COALESCE((
-                SELECT SUM(sm.quantity) 
-                FROM stock_movements sm 
-                WHERE sm.product_id = products.id
-            ), 0) as current_stock'));
+        $query = $this->product->with(['category'])
+            ->select('products.*')
+            ->leftJoinSub(
+                StockMovement::select('product_id', DB::raw('SUM(quantity) as current_stock'))
+                    ->groupBy('product_id'),
+                'stock_agg',
+                'stock_agg.product_id', '=', 'products.id'
+            )
+            ->addSelect(['stock_agg.current_stock'])
+            ->leftJoinSub(
+                \App\Models\ProductPrice::select('product_id', 'price')
+                    ->whereIn('id', function ($q) {
+                        $q->select(DB::raw('MAX(id)'))->from('product_prices')->groupBy('product_id');
+                    }),
+                'latest_prices', 'latest_prices.product_id', '=', 'products.id'
+            )
+            ->leftJoinSub(
+                \App\Models\ProductCost::select('product_id', 'cost')
+                    ->whereIn('id', function ($q) {
+                        $q->select(DB::raw('MAX(id)'))->from('product_costs')->groupBy('product_id');
+                    }),
+                'latest_costs', 'latest_costs.product_id', '=', 'products.id'
+            )
+            ->addSelect(['latest_prices.price as current_price', 'latest_costs.cost as current_cost'])
+            ->addSelect(DB::raw('COALESCE(stock_agg.current_stock, 0) as current_stock'));
 
         if (!empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {
-                $q->where('name', 'like', '%' . $filters['search'] . '%')
-                  ->orWhere('sku', 'like', '%' . $filters['search'] . '%');
+                $q->where('products.name', 'like', '%' . $filters['search'] . '%')
+                  ->orWhere('products.sku', 'like', '%' . $filters['search'] . '%');
             });
         }
 
         if (!empty($filters['category_id'])) {
-            $query->where('category_id', $filters['category_id']);
+            $query->where('products.category_id', $filters['category_id']);
         }
 
         if (!empty($filters['low_stock'])) {
-            $query->havingRaw('current_stock < ?', [$filters['low_stock']]);
+            $query->having('current_stock', '<', $filters['low_stock']);
         }
 
-        return $query->orderBy('name')->paginate($perPage);
+        return $query->orderBy('products.name')->paginate($perPage);
     }
 
     public function getStockMovements(int $productId, array $filters = [])

@@ -42,6 +42,42 @@ A complete **Laravel 10+ POS SaaS system with PWA frontend** built according to 
 - ✅ Digital receipt automation
 - ✅ Message queue system
 - ✅ Campaign support
+- ✅ WA Engine (self-hosted WhatsApp Web automation)
+
+### ⚠️ WhatsApp Setup Required
+
+For WhatsApp receipts to be sent automatically, you need to run the queue worker:
+
+**Option 1: Run Queue Worker (Recommended for Development)**
+```bash
+php artisan queue:work
+```
+
+**Option 2: Setup Cron Job**
+Add to your crontab (`crontab -e`):
+```bash
+* * * * * cd /Users/alfanrlyan/Desktop/laravel/Lorikeet && php artisan whatsapp:process >> /dev/null 2>&1
+```
+
+**Option 3: Use Laravel Scheduler**
+Add to `app/Console/Kernel.php`:
+```php
+protected function schedule(Schedule $schedule)
+{
+    $schedule->command('whatsapp:process')->everyMinute();
+}
+```
+Then run:
+```bash
+php artisan schedule:work
+```
+
+**Make sure WA Engine is running:**
+```bash
+cd wa-engine
+npm start
+```
+Verify at: http://localhost:3000/health
 
 ### Analytics
 - ✅ Daily sales aggregation

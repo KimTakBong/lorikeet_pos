@@ -18,12 +18,13 @@ class ProductController extends Controller
         $filters = [
             'search' => $request->query('search'),
             'category_id' => $request->query('category_id'),
+            'is_active' => $request->query('is_active'),
             'sort_by' => $request->query('sort_by', 'name'),
             'sort_direction' => $request->query('sort_direction', 'asc'),
         ];
         $page = $request->query('page', 1);
 
-        $products = $this->productService->getProducts(array_filter($filters), (int) $page);
+        $products = $this->productService->getProducts(array_filter($filters, fn($v) => $v !== null && $v !== ''), (int) $page);
 
         return response()->json([
             'success' => true,
@@ -93,7 +94,9 @@ class ProductController extends Controller
 
     public function categories(): JsonResponse
     {
-        $categories = $this->productService->getCategories();
+        $categories = cache()->remember('product_categories', 3600, function () {
+            return $this->productService->getCategories();
+        });
 
         return response()->json([
             'success' => true,

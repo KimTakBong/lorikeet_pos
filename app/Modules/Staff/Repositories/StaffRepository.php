@@ -97,7 +97,7 @@ class StaffRepository
 
     public function createShift(array $data): Shift
     {
-        return $this->shift->create([
+        $shift = $this->shift->create([
             'staff_id' => $data['staff_id'],
             'start_time' => $data['start_time'],
             'end_time' => $data['end_time'] ?? null,
@@ -106,6 +106,11 @@ class StaffRepository
             'expected_cash' => $data['expected_cash'] ?? null,
             'cash_difference' => $data['cash_difference'] ?? null,
         ]);
+
+        // Invalidate active shifts cache
+        cache()->forget('active_shifts_' . today()->toDateString());
+
+        return $shift;
     }
 
     public function updateShift(Shift $shift, array $data): Shift
@@ -131,15 +136,20 @@ class StaffRepository
             'cash_difference' => $data['closing_cash'] - $expectedCash,
         ]);
 
+        // Invalidate active shifts cache
+        cache()->forget('active_shifts_' . today()->toDateString());
+
         return $shift->fresh();
     }
 
     public function getActiveShifts()
     {
-        return $this->shift->whereNull('end_time')
-            ->whereDate('start_time', today())
-            ->with(['staff'])
-            ->get();
+        return cache()->remember('active_shifts_' . today()->toDateString(), 30, function () {
+            return $this->shift->whereNull('end_time')
+                ->whereDate('start_time', today())
+                ->with(['staff:id,name,email'])
+                ->get();
+        });
     }
 
     public function getCurrentShiftForStaff(int $staffId)

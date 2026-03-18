@@ -1,38 +1,35 @@
 <template>
   <div class="space-y-6">
-    <div>
-      <h1 class="text-2xl font-bold text-gray-900">Orders</h1>
-      <p class="text-gray-500 mt-1">View and manage all orders</p>
-    </div>
-
-    <!-- Filters -->
-    <div class="bg-white rounded-xl shadow-sm p-4">
+    <!-- Filter Box with Header -->
+    <div class="bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-700">
+      <h1 class="text-xl font-bold text-white mb-4">Orders</h1>
+      <p class="text-gray-400 mb-4 -mt-2">View and manage all orders</p>
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
-          <input v-model="filters.search" @input="debouncedSearch" type="text" placeholder="Invoice or customer..." class="w-full border border-gray-300 rounded-lg px-4 py-2" />
+          <label class="block text-sm font-medium text-gray-400 mb-2">Search</label>
+          <input v-model="filters.search" @input="debouncedSearch" type="text" placeholder="Invoice or customer..." class="w-full border border-gray-600 rounded-lg px-4 py-2 bg-gray-700 text-white" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-          <select v-model="filters.status" @change="tableRef?.refresh()" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+          <label class="block text-sm font-medium text-gray-400 mb-2">Status</label>
+          <select v-model="filters.status" @change="tableRef?.refresh()" class="w-full border border-gray-600 rounded-lg px-4 py-2 bg-gray-700 text-white">
             <option value="">All Status</option>
             <option value="completed">Completed</option>
             <option value="refunded">Refunded</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">From Date</label>
-          <input v-model="filters.date_from" @change="tableRef?.refresh()" type="date" class="w-full border border-gray-300 rounded-lg px-4 py-2" />
+          <label class="block text-sm font-medium text-gray-400 mb-2">From Date</label>
+          <input v-model="filters.date_from" @change="tableRef?.refresh()" type="date" class="w-full border border-gray-600 rounded-lg px-4 py-2 bg-gray-700 text-white" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">To Date</label>
-          <input v-model="filters.date_to" @change="tableRef?.refresh()" type="date" class="w-full border border-gray-300 rounded-lg px-4 py-2" />
+          <label class="block text-sm font-medium text-gray-400 mb-2">To Date</label>
+          <input v-model="filters.date_to" @change="tableRef?.refresh()" type="date" class="w-full border border-gray-600 rounded-lg px-4 py-2 bg-gray-700 text-white" />
         </div>
       </div>
     </div>
 
     <!-- Orders Table -->
-    <DataTable ref="tableRef" :columns="columns" :fetch-data="fetchOrders" search-placeholder="" empty-message="No orders found">
+    <DataTable ref="tableRef" :columns="columns" :fetch-data="fetchOrders" search-placeholder="" empty-message="No orders found" :show-toolbar="false">
       <template #cell-invoice_number="{ item }">
         <div class="font-medium text-indigo-600">{{ item.invoice_number }}</div>
         <div class="text-xs text-gray-500">{{ formatDate(item.created_at) }}</div>
@@ -55,25 +52,31 @@
 
       <template #cell-actions="{ item }">
         <div class="flex justify-end gap-2">
-          <ButtonIcon @click="viewOrder(item)" title="View Details">
-            <Eye class="w-5 h-5" />
-          </ButtonIcon>
-          <ButtonIcon v-if="item.order_status !== 'refunded'" variant="danger" @click="openRefundModal(item)" title="Refund">
-            <Undo2 class="w-5 h-5" />
-          </ButtonIcon>
+          <button v-if="item.customer?.phone" @click="sendReceipt(item)" :disabled="sendingReceipt === item.id" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+            <MessageCircle class="w-4 h-4" />
+            {{ sendingReceipt === item.id ? 'Sending...' : 'Receipt' }}
+          </button>
+          <button @click="viewOrder(item)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600/30 rounded-lg text-sm font-medium transition-colors">
+            <Eye class="w-4 h-4" />
+            Detail
+          </button>
+          <button v-if="item.order_status !== 'refunded'" @click="openRefundModal(item)" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600/20 text-red-400 hover:bg-red-600/30 rounded-lg text-sm font-medium transition-colors">
+            <Undo2 class="w-4 h-4" />
+            Refund
+          </button>
         </div>
       </template>
     </DataTable>
 
     <!-- Order Detail Modal -->
     <div v-if="selectedOrder && showDetailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click.self="showDetailModal = false">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="bg-gray-800 rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
         <div class="p-6 border-b flex justify-between items-center">
           <div>
             <h2 class="text-xl font-bold text-gray-900">Order Details</h2>
             <p class="text-sm text-gray-500">{{ selectedOrder.invoice_number }}</p>
           </div>
-          <button @click="showDetailModal = false" class="text-gray-400 hover:text-gray-600">
+          <button @click="showDetailModal = false" class="text-gray-400 hover:text-gray-200">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
@@ -157,7 +160,7 @@
 
     <!-- Refund Modal -->
     <div v-if="showRefundModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click.self="showRefundModal = false">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg">
+      <div class="bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg">
         <div class="p-6 border-b">
           <h2 class="text-xl font-bold text-gray-900">Process Refund</h2>
           <p class="text-sm text-gray-500">{{ selectedOrder?.invoice_number }}</p>
@@ -167,12 +170,12 @@
             <label class="block text-sm font-medium text-gray-700 mb-2">Reason *</label>
             <textarea v-model="refundForm.reason" required rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500" placeholder="Reason for refund..."></textarea>
           </div>
-          <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+          <div class="bg-amber-900/30 border border-amber-700/50 rounded-lg p-3">
             <div class="flex items-start gap-2">
-              <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
-              <div class="text-sm text-yellow-800">
+              <div class="text-sm text-amber-300">
                 <p class="font-medium">Warning</p>
                 <p>This will refund the entire order. This action cannot be undone.</p>
               </div>
@@ -196,9 +199,10 @@ import ButtonSecondary from '../../components/ui/ButtonSecondary.vue';
 import ButtonPrimary from '../../components/ui/ButtonPrimary.vue';
 import ButtonDanger from '../../components/ui/ButtonDanger.vue';
 import AlertService from '../../components/alerts/AlertService.js';
-import { Eye, Undo2 } from 'lucide-vue-next';
+import { Eye, Undo2, MessageCircle } from 'lucide-vue-next';
 
 const tableRef = ref(null);
+const sendingReceipt = ref(null);
 const selectedOrder = ref(null);
 const showDetailModal = ref(false);
 const showRefundModal = ref(false);
@@ -300,9 +304,9 @@ async function processRefund() {
 
 function statusClass(status) {
   const classes = {
-    completed: 'bg-green-100 text-green-800',
-    refunded: 'bg-red-100 text-red-800',
-    pending: 'bg-yellow-100 text-yellow-800'
+    completed: 'bg-emerald-900/40 text-emerald-400',
+    refunded: 'bg-red-900/40 text-red-400',
+    pending: 'bg-amber-900/40 text-amber-400'
   };
   return classes[status] || 'bg-gray-100 text-gray-800';
 }
@@ -319,6 +323,21 @@ function formatDate(dateStr) {
 function formatDateTime(dateStr) {
   if (!dateStr) return '-';
   return new Date(dateStr).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+async function sendReceipt(order) {
+  if (!order.customer?.phone) return;
+  sendingReceipt.value = order.id;
+  try {
+    await axios.post('/api/v1/orders/' + order.id + '/send-receipt', {}, {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    AlertService.success('Receipt sent to ' + order.customer.phone);
+  } catch (e) {
+    AlertService.error('Failed: ' + (e.response?.data?.message || 'Error'));
+  } finally {
+    sendingReceipt.value = null;
+  }
 }
 
 onMounted(() => {

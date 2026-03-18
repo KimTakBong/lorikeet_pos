@@ -54,13 +54,13 @@
         </div>
 
         <!-- Payment Info for Non-Cash -->
-        <div v-else class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div v-else class="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4">
           <div class="flex items-start gap-3">
-            <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <div class="text-sm text-blue-800">
-              <p class="font-medium mb-1">Payment Instructions</p>
+            <div class="text-sm text-blue-300">
+              <p class="font-medium mb-1 text-blue-200">Payment Instructions</p>
               <p>Please complete the {{ paymentMethodName }} payment for Rp {{ formatPrice(total) }}</p>
             </div>
           </div>
@@ -139,7 +139,6 @@ function formatPrice(price) {
 }
 
 function confirmPayment() {
-  processing.value = true;
   emit('confirm', {
     paymentMethodId: selectedMethod.value,
     amount: selectedMethod.value === 1 ? cashReceived.value : props.total

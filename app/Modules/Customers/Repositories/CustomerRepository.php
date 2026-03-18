@@ -13,7 +13,9 @@ class CustomerRepository
 
     public function getAll(array $filters = [], int $perPage = 20)
     {
-        $query = $this->customer->with(['membership']);
+        $query = $this->customer->query()
+            ->select(['id', 'name', 'phone', 'email', 'created_at'])
+            ->withCount(['orders']);
 
         if (!empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {

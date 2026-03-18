@@ -70,13 +70,24 @@ class ProcessWhatsAppMessages extends Command
 
     private function sendViaWaEngine(MessageQueue $message)
     {
+        $payload = [
+            'phone' => $message->phone,
+        ];
+
+        // If image exists, send as image message
+        if ($message->image_path) {
+            $payload['type'] = 'image';
+            $payload['image_url'] = url($message->image_path);
+            $payload['caption'] = $message->message;
+        } else {
+            $payload['type'] = 'text';
+            $payload['message'] = $message->message;
+        }
+
         $response = Http::withHeaders([
             'X-API-KEY' => $this->waEngineApiKey,
             'Content-Type' => 'application/json',
-        ])->timeout(30)->post("{$this->waEngineUrl}/api/messages/send", [
-            'phone' => $message->phone,
-            'message' => $message->message,
-        ]);
+        ])->timeout(30)->post("{$this->waEngineUrl}/api/messages/send", $payload);
 
         return $response->json();
     }

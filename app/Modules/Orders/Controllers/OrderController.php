@@ -69,4 +69,41 @@ class OrderController extends Controller
             'data' => $refund,
         ]);
     }
+
+    public function sendReceipt(int $id): JsonResponse
+    {
+        $order = $this->orderService->getOrderById($id);
+
+        if (!$order->customer || !$order->customer->phone) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No customer phone number on this order',
+            ], 422);
+        }
+
+        // Generate receipt image
+        $receiptService = app(\App\Services\ReceiptImageService::class);
+        $imagePath = $receiptService->generate($order);
+
+        $storeName = \App\Models\Setting::get('business.store_name', 'Lorikeet POS');
+        $message = "*{$storeName}*\n\n";
+        $message .= "Invoice: {$order->invoice_number}\n";
+        $message .= "Date: " . \Carbon\Carbon::parse($order->created_at)->format('d M Y, H:i') . "\n\n";
+        $message .= "Total: Rp " . number_format($order->grand_total, 0, ',', '.') . "\n\n";
+        $message .= "Thank you for your purchase!";
+
+        \App\Models\MessageQueue::create([
+            'customer_id' => $order->customer_id,
+            'phone' => $order->customer->phone,
+            'message' => $message,
+            'image_path' => $imagePath,
+            'status' => 'pending',
+            'scheduled_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Receipt queued for delivery',
+        ]);
+    }
 }
