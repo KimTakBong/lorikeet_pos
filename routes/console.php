@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Process WhatsApp message queue every minute
 Schedule::command('whatsapp:process')->everyMinute();
+
+// Aggregate daily stats at midnight
+Schedule::command('stats:daily')->dailyAt('00:05');

@@ -22,8 +22,27 @@ class POSService
             $discountTotal = $data['discount_amount'] ?? 0;
             $taxTotal = $data['tax_amount'] ?? 0;
 
+            // Validate stock before creating order
+            foreach ($data['items'] as $item) {
+                $product = Product::find($item['product_id']);
+                if (!$product) {
+                    throw new \Exception("Product not found: {$item['product_id']}");
+                }
+
+                // Calculate current stock from movements
+                $currentStock = StockMovement::where('product_id', $product->id)->sum('quantity');
+                if ($currentStock < $item['quantity']) {
+                    throw new \Exception("Insufficient stock for {$product->name}. Available: {$currentStock}, Requested: {$item['quantity']}");
+                }
+            }
+
             foreach ($data['items'] as $item) {
                 $subtotal += $item['price'] * $item['quantity'];
+            }
+
+            // Validate discount doesn't exceed subtotal
+            if ($discountTotal > $subtotal) {
+                throw new \Exception("Discount (Rp " . number_format($discountTotal) . ") exceeds subtotal (Rp " . number_format($subtotal) . ")");
             }
 
             $grandTotal = $subtotal - $discountTotal + $taxTotal;
@@ -126,7 +145,7 @@ class POSService
     private function queueWhatsAppReceipt(Order $order): void
     {
         $customer = $order->customer;
-        $message = "*TOKO KOPI NUSANTARA*\n\nInvoice: {$order->invoice_number}\n\n";
+        $message = "*" . \App\Models\Setting::get('business.store_name', 'Lorikeet POS') . "*\n\nInvoice: {$order->invoice_number}\n\n";
 
         foreach ($order->items as $item) {
             $message .= "{$item->product_name} x{$item->quantity}\n";

@@ -7,9 +7,6 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     // POS Transactions (order creation only - detail via Orders module)
     Route::post('/orders', [POSController::class, 'createOrder']);
     
-    // Products
-    Route::get('/products', [POSController::class, 'getProducts']);
-    
     // Customers
     Route::get('/customers', [POSController::class, 'getCustomers']);
     Route::post('/customers', [POSController::class, 'createCustomer']);

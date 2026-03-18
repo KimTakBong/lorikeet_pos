@@ -113,7 +113,12 @@ class OrderRepository
     {
         return DB::transaction(function () use ($orderId, $data) {
             $order = $this->getById($orderId);
-            
+
+            // Prevent double refund
+            if ($order->order_status === 'refunded') {
+                throw new \Exception('This order has already been refunded');
+            }
+
             $refund = $this->refund->create([
                 'order_id' => $orderId,
                 'staff_id' => $data['staff_id'],
