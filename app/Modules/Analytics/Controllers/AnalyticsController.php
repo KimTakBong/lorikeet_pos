@@ -11,6 +11,7 @@ use App\Models\Product;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class AnalyticsController extends Controller
@@ -20,6 +21,17 @@ class AnalyticsController extends Controller
         $dateFrom = $request->query('date_from', now()->startOfMonth());
         $dateTo = $request->query('date_to', now()->endOfMonth());
 
+        $cacheKey = 'analytics_dashboard_' . md5($dateFrom . $dateTo);
+
+        $data = Cache::remember($cacheKey, 120, function () use ($dateFrom, $dateTo) {
+            return $this->buildDashboardData($dateFrom, $dateTo);
+        });
+
+        return response()->json($data);
+    }
+
+    private function buildDashboardData($dateFrom, $dateTo): array
+    {
         // Sales stats - use whereDate for proper date comparison
         $salesStats = Order::whereDate('created_at', '>=', $dateFrom)
             ->whereDate('created_at', '<=', $dateTo)
@@ -106,7 +118,7 @@ class AnalyticsController extends Controller
             ->limit(10)
             ->get();
 
-        return response()->json([
+        return [
             'success' => true,
             'data' => [
                 'stats' => [
@@ -138,7 +150,7 @@ class AnalyticsController extends Controller
                 'payment_breakdown' => $paymentBreakdown,
                 'recent_orders' => $recentOrders,
             ],
-        ]);
+        ];
     }
 
     public function topProducts(Request $request): JsonResponse

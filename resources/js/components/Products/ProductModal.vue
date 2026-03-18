@@ -1,7 +1,7 @@
 <template>
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-      <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10">
+    <div class="dark:bg-gray-800 bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div class="p-6 border-b flex justify-between items-center sticky top-0 dark:bg-gray-800 bg-white z-10">
         <h2 class="text-xl font-bold text-gray-900">{{ isEdit ? 'Edit Product' : 'Create Product' }}</h2>
         <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

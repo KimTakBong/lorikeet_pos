@@ -1,7 +1,7 @@
 <template>
   <div v-if="modelValue" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click.self="close">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true">
-      <div class="p-6 border-b sticky top-0 bg-white z-10 flex justify-between items-center">
+    <div class="dark:bg-gray-800 bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true">
+      <div class="p-6 border-b sticky top-0 dark:bg-gray-800 bg-white z-10 flex justify-between items-center">
         <h2 class="text-xl font-bold text-gray-900">{{ title }}</h2>
         <button @click="close" class="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Close" type="button">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>

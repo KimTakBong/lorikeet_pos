@@ -1,38 +1,38 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-900">
     <div class="max-w-md w-full mx-4">
-      <div class="bg-white rounded-2xl shadow-2xl p-8">
+      <div class="dark:bg-gray-800 bg-white rounded-2xl shadow-2xl p-8">
         <div class="text-center mb-8">
           <div class="w-16 h-16 bg-indigo-600 rounded-xl mx-auto flex items-center justify-center mb-4">
             <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
-          <h1 class="text-2xl font-bold text-gray-900">Lorikeet POS</h1>
-          <p class="text-gray-500 mt-2">Sign in to your account</p>
+          <h1 class="text-2xl font-bold dark:text-white text-gray-900">Lorikeet POS</h1>
+          <p class="dark:text-gray-400 text-gray-500 mt-2">Sign in to your account</p>
         </div>
 
         <form @submit.prevent="handleLogin" class="space-y-6">
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <label for="email" class="block text-sm font-medium dark:text-gray-300 text-gray-700 mb-2">Email</label>
             <input
               id="email"
               v-model="email"
               type="email"
               required
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              class="w-full px-4 py-3 border dark:border-gray-600 border-gray-300 rounded-lg dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               placeholder="admin@example.com"
             />
           </div>
 
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+            <label for="password" class="block text-sm font-medium dark:text-gray-300 text-gray-700 mb-2">Password</label>
             <input
               id="password"
               v-model="password"
               type="password"
               required
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              class="w-full px-4 py-3 border dark:border-gray-600 border-gray-300 rounded-lg dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               placeholder="••••••••"
             />
           </div>
@@ -47,8 +47,8 @@
           </button>
         </form>
 
-        <div v-if="error" class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p class="text-red-600 text-sm">{{ error }}</p>
+        <div v-if="error" class="mt-4 p-4 dark:bg-red-900/30 bg-red-50 dark:border-red-800 border border-red-200 rounded-lg">
+          <p class="dark:text-red-400 text-red-600 text-sm">{{ error }}</p>
         </div>
       </div>
     </div>

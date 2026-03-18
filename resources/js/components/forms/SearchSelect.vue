@@ -7,7 +7,7 @@
       type="button"
       @click="toggleDropdown"
       :disabled="disabled"
-      class="w-full flex items-center justify-between px-4 py-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed pr-10"
+      class="w-full flex items-center justify-between px-4 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 bg-white hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed pr-10"
     >
       <span :class="modelValue ? 'text-gray-900' : 'text-gray-500'" class="truncate">
         {{ modelValue ? getSelectedLabel() : placeholder }}
@@ -31,7 +31,7 @@
     </button>
 
     <!-- Dropdown -->
-    <div v-if="isOpen" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg overflow-hidden">
+    <div v-if="isOpen" class="absolute z-50 w-full mt-1 dark:bg-gray-800 bg-white border dark:border-gray-600 border-gray-300 rounded-lg shadow-lg overflow-hidden">
       <!-- Search Input -->
       <div class="p-2 border-b bg-gray-50">
         <div class="relative">

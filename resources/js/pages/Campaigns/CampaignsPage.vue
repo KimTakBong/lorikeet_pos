@@ -77,7 +77,7 @@
 
     <!-- Recipients Modal -->
     <div v-if="showRecipientsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click.self="showRecipientsModal = false">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="dark:bg-gray-800 bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         <div class="p-6 border-b flex justify-between items-center">
           <h2 class="text-xl font-bold text-gray-900">Manage Recipients - {{ selectedCampaign?.name }}</h2>
           <button @click="showRecipientsModal = false" class="text-gray-400 hover:text-gray-600">
@@ -119,7 +119,7 @@
 
     <!-- Send Campaign Modal -->
     <div v-if="showSendModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click.self="showSendModal = false">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="dark:bg-gray-800 bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         <div class="p-6 border-b flex justify-between items-center">
           <h2 class="text-xl font-bold text-gray-900">Send Campaign - {{ selectedCampaign?.name }}</h2>
           <button @click="showSendModal = false" class="text-gray-400 hover:text-gray-600">

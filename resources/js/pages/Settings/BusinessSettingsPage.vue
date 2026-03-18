@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <!-- Header -->
     <div class="flex items-center gap-3">
-      <button @click="$router.push('/settings')" class="p-2 hover:bg-gray-100 rounded-lg">
+      <button @click="$router.push('/settings')" class="p-2 dark:hover:bg-gray-700 hover:bg-gray-100 rounded-lg">
         <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
         </svg>
@@ -76,9 +76,9 @@
         </div>
 
         <!-- Preview -->
-        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <div class="dark:bg-gray-800 bg-gray-50 dark:border-gray-700 border border-gray-200 rounded-lg p-4">
           <h3 class="font-semibold text-gray-900 mb-3">Receipt Preview</h3>
-          <div class="bg-white border border-dashed border-gray-300 rounded p-4 font-mono text-sm">
+          <div class="dark:bg-gray-800 bg-white border border-dashed dark:border-gray-600 border-gray-300 rounded p-4 font-mono text-sm">
             <p class="text-center font-bold mb-2">*{{ form.store_name || 'STORE NAME' }}*</p>
             <p class="text-center text-gray-600 mb-4">Invoice: INV-20260310-00001</p>
             <div class="border-t border-b border-dashed border-gray-300 py-2 mb-2">

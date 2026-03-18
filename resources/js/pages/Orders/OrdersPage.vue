@@ -115,7 +115,7 @@
                   <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
                 </tr>
               </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
+              <tbody class="dark:bg-gray-800 bg-white divide-y dark:divide-gray-700 divide-gray-200">
                 <tr v-for="item in selectedOrder.items" :key="item.id">
                   <td class="px-4 py-3">{{ item.product_name }}</td>
                   <td class="px-4 py-3 text-right">{{ item.quantity }}</td>
@@ -136,7 +136,7 @@
                   <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
                 </tr>
               </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
+              <tbody class="dark:bg-gray-800 bg-white divide-y dark:divide-gray-700 divide-gray-200">
                 <tr v-for="payment in selectedOrder.payments" :key="payment.id">
                   <td class="px-4 py-3">{{ payment.payment_method?.name || '-' }}</td>
                   <td class="px-4 py-3 text-right font-medium">Rp {{ formatPrice(payment.amount) }}</td>

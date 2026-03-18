@@ -13,23 +13,23 @@
 
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="dark:bg-gray-800 bg-white rounded-xl shadow-sm p-6">
         <div class="text-sm text-gray-500 mb-1">Total This Month</div>
         <div class="text-2xl font-bold text-gray-900">Rp {{ formatPrice(summary.total) }}</div>
         <div class="text-xs text-gray-500 mt-1">{{ summary.count }} transactions</div>
       </div>
-      <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="dark:bg-gray-800 bg-white rounded-xl shadow-sm p-6">
         <div class="text-sm text-gray-500 mb-1">Average per Transaction</div>
         <div class="text-2xl font-bold text-gray-900">Rp {{ formatPrice(summary.count > 0 ? summary.total / summary.count : 0) }}</div>
       </div>
-      <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="dark:bg-gray-800 bg-white rounded-xl shadow-sm p-6">
         <div class="text-sm text-gray-500 mb-1">Top Category</div>
         <div class="text-lg font-bold text-gray-900">{{ topCategory }}</div>
       </div>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-xl shadow-sm p-4">
+    <div class="dark:bg-gray-800 bg-white rounded-xl shadow-sm p-4">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
