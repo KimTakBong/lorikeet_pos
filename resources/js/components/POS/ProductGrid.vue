@@ -40,13 +40,27 @@
         <div
           v-for="product in products"
           :key="product.id"
-          @click="$emit('add-to-cart', product)"
-          class="product-card cursor-pointer transform transition-transform hover:scale-105 active:scale-95"
+          @click="product.stock > 0 && $emit('add-to-cart', product)"
+          :class="[
+            'product-card transform transition-transform',
+            product.stock > 0 ? 'cursor-pointer hover:scale-105 active:scale-95' : 'opacity-50 cursor-not-allowed'
+          ]"
         >
           <div class="font-medium text-gray-900 truncate">{{ product.name }}</div>
           <div class="text-blue-600 font-semibold mt-1">Rp {{ formatPrice(product.current_price || 0) }}</div>
-          <div v-if="product.category" class="text-xs text-gray-500 mt-1">{{ product.category.name }}</div>
+          <div class="flex items-center justify-between mt-1">
+            <div v-if="product.category" class="text-xs text-gray-500">{{ product.category.name }}</div>
+            <span :class="[
+              'text-xs font-medium px-2 py-0.5 rounded-full',
+              product.stock > 10 ? 'bg-green-100 text-green-700' :
+              product.stock > 0 ? 'bg-yellow-100 text-yellow-700' :
+              'bg-red-100 text-red-700'
+            ]">
+              {{ product.stock > 0 ? product.stock + ' pcs' : 'Habis' }}
+            </span>
+          </div>
         </div>
+
       </div>
     </div>
   </div>

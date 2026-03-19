@@ -41,9 +41,16 @@ class ProductRepository
                 'latest_costs',
                 'latest_costs.product_id', '=', 'products.id'
             )
+            ->leftJoinSub(
+                \App\Models\StockMovement::select('product_id', DB::raw('COALESCE(SUM(quantity), 0) as stock'))
+                    ->groupBy('product_id'),
+                'stock_agg',
+                'stock_agg.product_id', '=', 'products.id'
+            )
             ->addSelect([
                 'latest_prices.price as current_price',
                 'latest_costs.cost as current_cost',
+                DB::raw('COALESCE(stock_agg.stock, 0) as stock'),
             ]);
 
         if (!empty($filters['search'])) {
