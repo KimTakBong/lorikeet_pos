@@ -46,7 +46,7 @@ class POSController extends Controller
             $order = $this->posService->createOrder($validated);
 
             // Send WhatsApp receipt if customer phone is provided
-            if ($validated['customer_phone'] || $order->customer_id) {
+            if (($validated['customer_phone'] ?? null) || $order->customer_id) {
                 $this->sendWhatsAppReceipt($order, $validated['customer_phone'] ?? null);
             }
 
